@@ -16,7 +16,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
-            "args": "-t -e -g mysingletext.txt out.txt"
+            "args": "-f -e -gen ./src/myletter.txt ./out/out.txt"
         }
     ]
 }

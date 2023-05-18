@@ -3,15 +3,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.io.FileWriter;
 
 public class App {
+    private static String outputFilePath;
     public static void main(String[] args) throws Exception {
         String mode = args[0];
         String encryptOrDecrypt = args[1];
         String keymode = args[2];
         Key key = keymode.equals("-gen") ? generateKey() : new Key(args[3]); // get key ready for process
         String textOrFilePath = null;
-        String outputFile = args[args.length - 1];
+        outputFilePath = args[args.length - 1];
         // text mode
         if (mode.equals("-t")) {
             // read rest of string input by args index
@@ -38,17 +40,19 @@ public class App {
             textOrFilePath = keymode.equals("-gen") ? args[3] : args[4];
             // file encryption
             if (encryptOrDecrypt.equals("-e")) {
+                System.out.println("reading path: " + textOrFilePath);
                 if (fileExists(textOrFilePath)) {
                     encryptFile(textOrFilePath, key);
                 } else {
-                    System.out.println("Invalid file path");
+                    System.out.println("Invalid file path from file encryption");
                 }
             // file decryption
             } else if (encryptOrDecrypt.equals("-d")) {
+                System.out.println("reading path: " + textOrFilePath);
                 if (fileExists(textOrFilePath)) {
                     decryptFile(textOrFilePath, key);
                 } else {
-                    System.out.println("Invalid file path");
+                    System.out.println("Invalid file path from file decryption");
                 }
             } else {
                 System.out.println("Invalid input from file mode");
@@ -56,7 +60,7 @@ public class App {
         } else {
             System.out.println("Invalid input from command line");
         }
-        System.out.println("Output file: " + outputFile);
+        // System.out.println("Output file: " + outputFilePath);
     }
 
     // <<----------------- END OF MAIN ----------------->>
@@ -70,6 +74,12 @@ public class App {
     public static byte[] readFileToByteArray(String filePath) throws IOException {
         Path path = Paths.get(filePath);
         return Files.readAllBytes(path);
+    }
+
+    public static void writeToFile(byte[] data) throws IOException {
+        FileWriter writer = new FileWriter(outputFilePath);
+        writer.write(data.toString());
+        writer.close();
     }
 
     // <<----------------- END OF FILE OPERATION ----------------->>
@@ -103,17 +113,19 @@ public class App {
     // <<----------------- END OF KEY OPERATION ----------------->>
     // ----------------------------------------------------------------
     // <<----------------- ENCRYPT AND DECRYPT ----------------->>
-    public static void encryptText(String text, Key key) {
+    public static void encryptText(String text, Key key) throws IOException {
         // encryption process
         System.out.println("Encrypting text: " + text + " with key: " + key.getKey());
+        writeToFile(text.getBytes());
     };
 
-    public static void decryptText(String text, Key key) {
+    public static void decryptText(String text, Key key) throws IOException {
         // decryption process
         System.out.println("Decrypting text: " + text + " with key: " + key.getKey());
+        writeToFile(text.getBytes());
     };
 
-    public static void encryptFile(String filePath, Key key) {
+    public static void encryptFile(String filePath, Key key) throws IOException {
         byte[] fileBytes = null;
         try {
             fileBytes = readFileToByteArray(filePath);
@@ -122,9 +134,10 @@ public class App {
         }
         // encryption process
         System.out.println("Encrypting file: " + fileBytes + " with key: " + key.getKey());
+        writeToFile(fileBytes);
     };
 
-    public static void decryptFile(String filePath, Key key) {
+    public static void decryptFile(String filePath, Key key) throws IOException {
         byte[] fileBytes = null;
         try {
             fileBytes = readFileToByteArray(filePath);
@@ -133,6 +146,7 @@ public class App {
         }
         // decryption process
         System.out.println("Decrypting file: " + fileBytes + " with key: " + key.getKey());
+        writeToFile(fileBytes);
     };
     // <<----------------- END OF ENCRYPT AND DECRYPT ----------------->>
 }
