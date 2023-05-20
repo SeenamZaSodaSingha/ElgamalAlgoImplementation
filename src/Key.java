@@ -1,28 +1,27 @@
-import java.io.File;
-import java.nio.charset.StandardCharsets;
+// import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+// import java.util.Arrays;
 
 public class Key {
-    private byte[] key = null;
-    private int gcd;
+    private FileOpr fileOpr = new FileOpr();
 
     public Key() {
-        generateKey();
     }
 
-    public Key(String key) {
-        this.key = isFilePath(key) ? readKeyFromFile(key) : key.getBytes(StandardCharsets.UTF_8);;
+    public Key(String path){
+        readKeyFromFile(path);
     }
 
-    public boolean isFilePath(String input) {
-        File file = new File(input);
-        return file.exists();
+    public void setKey(String key) {
+        // this.key = key.getBytes(StandardCharsets.UTF_8);
     }
 
     private byte[] readKeyFromFile(String filePath) {
-        try{
+        try {
             Path path = Paths.get(filePath);
             byte[] fileBytes = Files.readAllBytes(path);
             return fileBytes;
@@ -32,26 +31,25 @@ public class Key {
         }
     }
 
-    public void setKey(String key) {
-        this.key = key.getBytes(StandardCharsets.UTF_8);
-    }
-    
-    public byte[] getKey() {
-        return key;
-    }
-
-    public void generateKey() {
+    public void generateKey(String item) throws IOException {
         System.out.println("Generating key...");
-        //implement key generation algorithm
-        this.key = "GENERATED KEY".getBytes(StandardCharsets.UTF_8);;
-    }
+        byte[] array = fileOpr.isFilePath(item) ? fileOpr.readFileToByte(item) : item.getBytes();
+        BigInteger bigInt = new BigInteger(array);
 
-    public void gcd(int a, int b) {
-        if (b == 0) {
-            this.gcd = a;
-        } else {
-            gcd(b, a % b);
-        }
-        System.out.println("GCD: " + this.gcd);
+        generateKey genKey = new generateKey();
+        BigInteger p = genKey.random_P(bigInt.toString().length());
+        BigInteger g = genKey.random_G(p);
+        BigInteger u = genKey.random_U(p);
+        BigInteger y = g.modPow(u, p);
+        BigInteger k = genKey.random_K(p);
+        BigInteger a = g.modPow(k, p);
+        BigInteger b = y.modPow(k, p);
+        b = b.multiply(bigInt).mod(p);
+        /*
+         * not sure what need to print to file
+         * after key geneeration key must save to file but idk which to write
+         */
+        byte[] arr = b.toByteArray();
+        fileOpr.writeByteToFile(arr, "./out/key/key.txt");
     }
 }

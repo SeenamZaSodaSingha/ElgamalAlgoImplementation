@@ -22,7 +22,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
-            "args": "-t -e -gen This is my demo encrypt message ./out/messageEncOut.txt"
+            "args": "-t -e -gen CatTo ./out/messageEncOut.txt"
         },
         {
             "type": "java",
