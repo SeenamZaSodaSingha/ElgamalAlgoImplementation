@@ -6,17 +6,47 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Current File",
+            "name": "Run all test cases",
             "request": "launch",
-            "mainClass": "${file}"
+            "mainClass": "${file}",
+            "args": [
+                "-ea",
+                "-Dtest",
+                "-DfailIfNoTests=true"
+            ],
+            "console": "internalConsole"
         },
         {
             "type": "java",
-            "name": "App",
+            "name": "Test1: Encrypt message with no key.",
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
-            "args": "-f -e -gen ./src/myletter.txt ./out/out.txt"
+            "args": "-t -e -gen This is my demo encrypt message ./out/messageEncOut.txt"
+        },
+        {
+            "type": "java",
+            "name": "Test2: Encrypt message with plain text key.",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-t -e -k ThisIsTheKey1234 This is my demo encrypt message with key ./out/messageEncOutK.txt"
+        },
+        {
+            "type": "java",
+            "name": "Test3: Decrypt message with plain text key.",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-t -d -k ThisIsTheKey1234 This is my demo decrypt message ./out/messageDecOut.txt"
+        },
+        {
+            "type": "java",
+            "name": "Test4: Encrypt text file with no key.",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-f -e -gen ./test/myletter.txt ./out/messageEncOut.txt"
         }
     ]
 }
