@@ -1,4 +1,3 @@
-
 // Java program to demonstrate working of extended
 // Euclidean Algorithm
 import java.math.BigInteger;
@@ -28,7 +27,7 @@ class gcdExtended {
 			y = lasty.subtract(q.multiply(y));
 			lasty = temp;
 		}
-		System.out.println("GCD " + a + " and its Roots x : " + lastx + " y :" + lasty);
+		// System.out.println("GCD " + a + " and its Roots x : " + lastx + " y :" + lasty);
 		return a.equals(BigInteger.valueOf(1));
 	}
 }

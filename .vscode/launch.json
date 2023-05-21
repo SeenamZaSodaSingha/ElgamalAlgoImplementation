@@ -6,18 +6,6 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Run all test cases",
-            "request": "launch",
-            "mainClass": "${file}",
-            "args": [
-                "-ea",
-                "-Dtest",
-                "-DfailIfNoTests=true"
-            ],
-            "console": "internalConsole"
-        },
-        {
-            "type": "java",
             "name": "Test1: Encrypt message with no key.",
             "request": "launch",
             "mainClass": "App",
@@ -26,27 +14,35 @@
         },
         {
             "type": "java",
-            "name": "Test2: Encrypt message with plain text key.",
-            "request": "launch",
-            "mainClass": "App",
-            "projectName": "Elgamal algorithm_760e081a",
-            "args": "-t -e -k ThisIsTheKey1234 This is my demo encrypt message with key ./out/messageEncOutK.txt"
-        },
-        {
-            "type": "java",
-            "name": "Test3: Decrypt message with plain text key.",
-            "request": "launch",
-            "mainClass": "App",
-            "projectName": "Elgamal algorithm_760e081a",
-            "args": "-t -d -k ThisIsTheKey1234 This is my demo decrypt message ./out/messageDecOut.txt"
-        },
-        {
-            "type": "java",
-            "name": "Test4: Encrypt text file with no key.",
+            "name": "Test2: Encrypt text file with gen key.",
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
             "args": "-f -e -gen ./test/myletter.txt ./out/messageEncOut.txt"
-        }
+        },
+        {
+            "type": "java",
+            "name": "Test3: Decrypt text file with key",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-f -d -k ./out/key/Encrypt_key.json ./out/messageEncOut.txt ./out/messageFileDecOut.txt"
+        },
+        {
+            "type": "java",
+            "name": "Test4: Encrypt image file with key",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-f -e -gen ./test/22.png ./out/image_encrypt_out.png"
+        },
+        {
+            "type": "java",
+            "name": "Test5: Decrypt image file with key",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-f -d -k ./out/key/Encrypt_key.json ./out/image_encrypt_out.png ./out/image_decrypt_out.png"
+        },
     ]
 }

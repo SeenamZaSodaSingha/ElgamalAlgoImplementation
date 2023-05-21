@@ -9,8 +9,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import org.json.JSONObject;
 
 public class FileOpr {
+
+    public JSONObject readJsonFromFile (String filePath) throws IOException{
+        String jsonString = new String(Files.readAllBytes(Paths.get(filePath)));
+        JSONObject jsonObject = new JSONObject(jsonString);
+        return jsonObject;
+    }
+
+    public void writeJsonToFile(JSONObject jsonObject, String filePath) {
+        try (FileWriter fileWriter = new FileWriter(filePath)) {
+            // Write the JSON string to the file
+            fileWriter.write(jsonObject.toString());
+            System.out.println();
+            System.out.println("Data written to JSON file successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public boolean fileExists(String filePath) {
         File file = new File(filePath);
@@ -48,11 +66,11 @@ public class FileOpr {
         return file.exists();
     }
     
-    public byte[] readFiletoBigInteger(String fileName) throws IOException
+    public byte[] readFiletoBigInteger(String filePath) throws IOException
     {
-        // fileName = "./"+fileName;
-        FileInputStream fis = new FileInputStream(fileName);
-        byte[] arr = new byte[(int)fileName.length()];
+        File file = new File(filePath);
+        FileInputStream fis = new FileInputStream(file);
+        byte[] arr = new byte[(int)file.length()];
         //System.out.println("length byte of file : "+fileName.length());
         //System.out.println("length arr byte of file : "+arr.length);
         fis.read(arr);
@@ -61,25 +79,23 @@ public class FileOpr {
         return arr;
     }
 
-    public void writeBytetoFile(BigInteger massage, String fileName) throws IOException
+    public void writeBytetoFile(BigInteger massage, String filePath) throws IOException
     {
         byte[] arr = massage.toByteArray();
-        fileName = "./"+fileName;
-        try (FileOutputStream fos = new FileOutputStream(fileName)) {
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
             fos.write(arr);
             fos.close();
         }
     }
 
-    public BigInteger readKeytoBigInteger(String fileName) throws IOException
+    public BigInteger readKeytoBigInteger(String filePath) throws IOException
     {
-        fileName = "./"+fileName;
-        Path path = Path.of(fileName);
-        String str = Files.readString(path);
-        BigInteger bigInt = new BigInteger(str);
+        Path path = Paths.get(filePath);
+        BigInteger bigInt = new BigInteger(Files.readString(path));
         return bigInt;
     }
 
+    // write b to file
     public void writeKeytoFile(BigInteger massage, String fileName) throws IOException
     {
         fileName = "./"+fileName;

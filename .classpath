@@ -1,0 +1,3 @@
+<classpathentry kind="lib" path="lib/jackson-core.jar"/>
+<classpathentry kind="lib" path="lib/jackson-databind.jar"/>
+<classpathentry kind="lib" path="lib/jackson-annotations.jar"/>
