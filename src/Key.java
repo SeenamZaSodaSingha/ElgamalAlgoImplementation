@@ -5,16 +5,18 @@ import java.util.Random;
 import org.json.JSONObject;
 
 public class Key {
-    JSONObject jsonObject = new JSONObject();
+    private JSONObject jsonObject = new JSONObject();
     private FileOpr fileOpr = new FileOpr();
     private lehmenn_test lehm;
-    gcdExtended gcdE;
+    private gcdExtended gcdE;
+    private FastExponentiation fastExpo;
     private BigInteger _zero, _one, _two;
-    BigInteger p, g, u, y, k, a;
+    private BigInteger p, g, u, y, k, a;
 
     public Key() {
         lehm = new lehmenn_test();
         gcdE = new gcdExtended();
+        fastExpo = new FastExponentiation();
         _zero = BigInteger.valueOf(0);
         _one = BigInteger.valueOf(1);
         _two = BigInteger.valueOf(2);
@@ -165,7 +167,9 @@ public class Key {
 
         // g^(p-1)/2 % p must != 1
         // if g^(p-1)/2 % p = 1 then g = p-g 
-        if( g.modPow(p.subtract( _one ).divide( _two ), p).equals( _one ) )
+        //if( g.modPow(p.subtract( _one ).divide( _two ), p).equals( _one ) )
+        g = fastExpo.fastExponentiation(g, p.subtract( _one ).divide( _two ), p);
+        if( g.equals( _one ) )
             g = p.subtract(g);
         this.g = g;
         jsonObject.put("g", g);
@@ -212,6 +216,7 @@ public class Key {
     }
 
     public void generateY(){
-        this.y = g.modPow(u, p);
+        //this.y = g.modPow(u, p);
+        this.y = fastExpo.fastExponentiation(g, u, p);
     }
 }

@@ -5,8 +5,10 @@ import java.util.Random;
 
 class lehmenn_test
 {
+	private FastExponentiation fastExpo;
 	private BigInteger _zero, _one, _two;
 	lehmenn_test(){
+		fastExpo = new FastExponentiation();
 		_zero = BigInteger.valueOf(0);
 		_one = BigInteger.valueOf(1);
         _two = BigInteger.valueOf(2);
@@ -33,7 +35,8 @@ class lehmenn_test
 		while(t > 0)
 		{
 			// calculating final value using formula
-			BigInteger result = a.modPow(e, n); /////////////////////////////////////////////////////////
+			// BigInteger result = a.modPow(e, n);
+			BigInteger result = fastExpo.fastExponentiation(a, e, n);
 			//System.out.println("round i = "+(++i)+" result = "+result);
 			// if not equal, try for different base
 			if( result.mod(n).equals( _one ) || 

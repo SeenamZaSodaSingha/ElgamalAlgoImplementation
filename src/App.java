@@ -120,18 +120,21 @@ public class App {
         // System.out.println("Massage from ecnrypt elgamal : " + message.toString());
         // System.out.println("------------------------");
         FileOpr rw = new FileOpr();
+        FastExponentiation fastExpo = new FastExponentiation();
 
         System.out.println("Generating a...");
         BigInteger g = key.getG(), p = key.getP(), k = key.getK(), y = key.getY();
         // System.out.println("g: "+g.toString() + " p: "+p.toString() + " k:
         // "+k.toString());
-        BigInteger a = g.modPow(k, p);
+        // BigInteger a = g.modPow(k, p);
+        BigInteger a = fastExpo.fastExponentiation(g, k, p);
         key.setA(a);
         // rw.writeKeytoFile(a, "./out/key/keyA.txt");
         // System.out.println("a: "+a);
 
         System.out.println("Encryption to b (cipher text)...");
-        BigInteger b = y.modPow(k, p);
+        // BigInteger b = y.modPow(k, p);
+        BigInteger b = fastExpo.fastExponentiation(y, k, p);
         // System.out.println("b: "+b);
         // System.out.println("message : "+message.toString());
         b = b.multiply(message).mod(p);
@@ -144,6 +147,7 @@ public class App {
         // System.out.println("b from decrypt ELG: " + b.toString());
         // System.out.println("Message Byte length : " + b.toString().length());
         FileOpr rw = new FileOpr();
+        FastExponentiation fastExpo = new FastExponentiation();
         
         BigInteger p = key.getP(), u = key.getU();
         // System.out.println("p: " + p.toString());
@@ -151,7 +155,8 @@ public class App {
         // System.out.println("u: " + u.toString());
         System.out.println("Decryption...");
         // System.out.println("message b before decrypt: " + b);
-        b = b.multiply(a.modPow(p.subtract(BigInteger.valueOf(1)).subtract(u), p));
+        // b = b.multiply(a.modPow(p.subtract(BigInteger.valueOf(1)).subtract(u), p));
+        b = b.multiply(fastExpo.fastExponentiation(a, p.subtract(BigInteger.valueOf(1)).subtract(u), p));
         // System.out.println("message b before mod: " + b);
         b = b.mod(p);
         // System.out.println("message b after mod: " + b);
