@@ -55,6 +55,7 @@ public class FileOpr {
         }
     }
 
+    //Seenam's implementation
     public long getMetaDataLength(String filePath) throws IOException {
         Path file = Paths.get(filePath);
         BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);

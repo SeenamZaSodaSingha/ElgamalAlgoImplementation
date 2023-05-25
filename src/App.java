@@ -63,7 +63,8 @@ public class App {
             if (encryptOrDecrypt.equals("-e")) {
                 // System.out.println("reading path: " + textOrFilePath);
                 if (fileOpr.fileExists(textOrFilePath)) {
-                    System.out.println("File byte size from first read: " + fileOpr.getMetaDataLength(textOrFilePath) + " bytes");
+                    byte[] file = fileOpr.readFiletoBigInteger(textOrFilePath);
+                    System.out.println("File byte size from first read: " + file.length+ " bytes");
                     System.out.println("------------------------");
                     encryptFile(textOrFilePath, key);
                 } else {
@@ -74,7 +75,8 @@ public class App {
             } else if (encryptOrDecrypt.equals("-d")) {
                 System.out.println("reading path: " + textOrFilePath);
                 if (fileOpr.fileExists(textOrFilePath)) {
-                    System.out.println("File byte size from first read: " + fileOpr.getMetaDataLength(textOrFilePath) + " bytes");
+                    byte[] file = fileOpr.readFiletoBigInteger(textOrFilePath);
+                    System.out.println("File byte size from first read: " + file.length+ " bytes");
                     System.out.println("------------------------");
                     decryptFile(textOrFilePath, key);
                 } else {

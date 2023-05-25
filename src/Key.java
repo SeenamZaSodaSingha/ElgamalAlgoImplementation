@@ -5,7 +5,7 @@ import java.util.Random;
 import org.json.JSONObject;
 
 public class Key {
-    private final int NUM_THREADS = 9;
+    private final int NUM_THREADS = 1;
     private volatile BigInteger safePrime;
 
     private JSONObject jsonObject = new JSONObject();
@@ -169,9 +169,9 @@ public class Key {
         // CountDownLatch latch = new CountDownLatch(NUM_THREADS - 1);
         System.out.println("Generating safe prime...");
         while (safePrime == null) {
-            Thread[] threads = new Thread[NUM_THREADS];
+            Thread[] threads = new Thread[NUM_THREADS+1];
 
-            for (int i = 0; i < NUM_THREADS; i++) {
+            for (int i = 1; i <= NUM_THREADS; i++) {
                 threads[i] = new SafePrimeThread(i, n);
                 // SafePrimeThread.setLatch(latch);
                 threads[i].start();
@@ -272,14 +272,14 @@ public class Key {
         private final int threadIndex;
         private int DESIRED_BYTE_LENGTH;
         // private static CountDownLatch latch;
-        private String upperboundString = "9";
-        private String lowerboundString = "1";
+        private String upperboundString;
+        private String lowerboundString;
 
         public SafePrimeThread(int threadIndex, int n) {
             this.threadIndex = threadIndex;
             this.DESIRED_BYTE_LENGTH = n;
-            upperboundString = ""+threadIndex;
-            lowerboundString = ""+threadIndex;
+            upperboundString = "9";
+            lowerboundString = "1";
             for (int i = 0; i < DESIRED_BYTE_LENGTH; i++) {
                 upperboundString = upperboundString + "9"; //19999...n
                 lowerboundString = lowerboundString + "0"; //10000...n
@@ -295,21 +295,28 @@ public class Key {
             int roundTest = 100;
             Random rand = new Random();
             boolean loopI = true;
+            BigInteger iteration;
             
             BigInteger minLimit = new BigInteger(lowerboundString);
             BigInteger maxLimit = new BigInteger(upperboundString);
             maxLimit = maxLimit.subtract(minLimit);
             int len = maxLimit.bitLength();
-            BigInteger p = _zero;
+            // BigInteger p = _zero;
+            BigInteger p = new BigInteger(len, rand);
+            if (p.compareTo(minLimit) < 0)
+                p = p.add(minLimit);
+            if (p.compareTo(maxLimit) >= 0)
+                p = p.mod(maxLimit).add(minLimit);
+            iteration = maxLimit.subtract(p);
 
-            for (int i = 0; i < 300 && loopI; i++) {
+            // for (BigInteger i = new BigInteger("0"); i.compareTo(iteration) < 0 && loopI; i = i.add(_one)) {
+            while (p.compareTo(maxLimit) <= 0 && loopI) {
+                System.out.println("Loop is running...");
                 if (safePrime != null) {
-                    // latch.countDown(); 
-                    break;  
+                    break;
                 }
                 
                 // System.out.println("i = "+i);
-                p = new BigInteger(len, rand);
                 if (p.compareTo(minLimit) < 0)
                     p = p.add(minLimit);
                 if (p.compareTo(maxLimit) >= 0)
@@ -322,6 +329,7 @@ public class Key {
     
                 //check prime
                 if(!lehm.testPrime(p, roundTest)){
+                    p = p.add(_two);
                     continue;
                 }
     
@@ -332,6 +340,7 @@ public class Key {
     
                     //for break loopI
                     loopI = !lehm.testPrime(p, roundTest);
+                    break;
                     // System.out.println("is new p is prime? : "+(!loopI));
                 } else{
                     //break in safe prime case
@@ -345,9 +354,8 @@ public class Key {
                 System.out.println("Safe prime found in thread: " + threadIndex);
                 System.out.println("Shutting down other threads...");
             } else {
-                System.out.println("Safe prime not found in thread: " + threadIndex);
+                // System.out.println("Safe prime not found in thread: " + threadIndex);
             }
-
         }
     }
 }
