@@ -5,7 +5,7 @@ import java.util.Random;
 import org.json.JSONObject;
 
 public class Key {
-    private final int NUM_THREADS = 8;
+    private final int NUM_THREADS = 10;
     private volatile BigInteger safePrime;
 
     private JSONObject jsonObject = new JSONObject();
@@ -161,23 +161,27 @@ public class Key {
 
     // Seenam's code
     public void random_P(int n) throws Exception {
+        // CountDownLatch latch = new CountDownLatch(NUM_THREADS - 1);
         System.out.println("Generating safe prime...");
         while (safePrime == null) {
             Thread[] threads = new Thread[NUM_THREADS];
 
             for (int i = 0; i < NUM_THREADS; i++) {
                 threads[i] = new SafePrimeThread(i, n);
+                // SafePrimeThread.setLatch(latch);
                 threads[i].start();
-                System.out.println("Thread " + i + " create complete");
+                // System.out.println("Thread " + i + " create complete");
             }
-
+            System.out.println(NUM_THREADS+" threads created.");
             System.out.println("Waiting for threads to complete...");
+            // latch.await();
 
             try {
                 for (int i = 0; i < NUM_THREADS; i++) {
                     threads[i].join();
-                    System.out.println("Thread " + i + " join");
+                    // System.out.println("Thread " + i + " join");
                 }
+                System.out.println("All threads shutdown.");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -262,11 +266,16 @@ public class Key {
     class SafePrimeThread extends Thread {
         private final int threadIndex;
         int DESIRED_BYTE_LENGTH;
+        // private static CountDownLatch latch;
 
         public SafePrimeThread(int threadIndex, int n) {
             this.threadIndex = threadIndex;
             this.DESIRED_BYTE_LENGTH = n;
         }
+
+        // public static void setLatch(CountDownLatch latch) {
+        //     SafePrimeThread.latch = latch;
+        // }
 
         @Override
         public void run() {
@@ -286,9 +295,9 @@ public class Key {
             int len = maxLimit.bitLength();
             BigInteger p = _zero;
 
-            for (int i = 0; i < 200 && loopI; i++) {
+            for (int i = 0; i < 300 && loopI; i++) {
                 // System.out.println("i = "+i);
-                for (int j = 0; j < 200 && loopJ; j++) {
+                for (int j = 0; j < 100 && loopJ; j++) {
                     // System.out.println("j = "+j);
                     p = new BigInteger(len, rand);
                     if (p.compareTo(minLimit) < 0)
@@ -300,6 +309,10 @@ public class Key {
                     // loopJ = !lehm.testPrime(p, roundTest);
                     if (p.mod(_two).equals(_zero))
                         p = p.add(_one);
+                }
+                if (safePrime != null) {
+                    // latch.countDown(); 
+                    break;  
                 }
                 loopJ = true;
                 // p = generatePrime(n);
@@ -322,6 +335,8 @@ public class Key {
                 safePrime = p;
                 System.out.println("Safe prime found in thread: " + threadIndex);
                 System.out.println("Shutting down other threads...");
+            } else {
+                System.out.println("Safe prime not found in thread: " + threadIndex);
             }
 
         }

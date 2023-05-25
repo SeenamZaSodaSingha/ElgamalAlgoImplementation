@@ -188,6 +188,7 @@ public class App {
         System.out.println("Encrypting message: " + text);
         encryptElgamal(message, key);
         key.writeKeytoFile("./out/key/Encrypt_key.json");
+        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
         // fileOpr.writeByteToFile(text.getBytes()/* byte array after encrypt */,
         // outputFilePath);
     };
@@ -209,6 +210,7 @@ public class App {
         BigInteger b = rw.readKeytoBigInteger(text);
         System.out.println("Decrypting text: " + text);
         decryptElgamal(a, b, key);
+        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
     };
 
     public static void encryptFile(String filePath, Key key) throws Exception {
@@ -248,6 +250,7 @@ public class App {
          */
         System.out.println("Decrypting file: " + filePath);
         decryptElgamal(a, b, key);
+        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
         // writeTextToFile("file", filePath);
         // fileOpr.writeByteToFile(fileBytes /* byte array after decrypt */,
         // outputFilePath);
