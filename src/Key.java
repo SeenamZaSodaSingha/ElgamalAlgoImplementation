@@ -5,7 +5,7 @@ import java.util.Random;
 import org.json.JSONObject;
 
 public class Key {
-    private final int NUM_THREADS = 10;
+    private final int NUM_THREADS = 9;
     private volatile BigInteger safePrime;
 
     private JSONObject jsonObject = new JSONObject();
@@ -109,54 +109,59 @@ public class Key {
     }
 
     // Beat's code
-    // public void random_P(int n){
-    // int roundTest = 100;
-    // Random rand = new Random();
-    // boolean loopI = true, loopJ = true;
+    // public void random_P(int n) {
+    //     int roundTest = 100;
+    //     Random rand = new Random();
+    //     boolean loopI = true, loopJ = true;
 
-    // String upperboundString = "9";
-    // String lowerboundString = "1";
-    // for (int i = 0; i < n; i++) {
-    // upperboundString = upperboundString + "9";
-    // lowerboundString = lowerboundString + "0";
-    // }
-    // BigInteger minLimit = new BigInteger(lowerboundString);
-    // BigInteger maxLimit = new BigInteger(upperboundString);
-    // maxLimit = maxLimit.subtract(minLimit);
-    // int len = maxLimit.bitLength();
-    // BigInteger p = _zero;
+    //     String upperboundString = "9";
+    //     String lowerboundString = "1";
+    //     for (int i = 0; i < n; i++) {
+    //         upperboundString = upperboundString + "9";
+    //         lowerboundString = lowerboundString + "0";
+    //     }
+    //     BigInteger minLimit = new BigInteger(lowerboundString);
+    //     BigInteger maxLimit = new BigInteger(upperboundString);
+    //     maxLimit = maxLimit.subtract(minLimit);
+    //     int len = maxLimit.bitLength();
+    //     BigInteger p = _zero;
 
-    // for (int i = 0; i < 100 && loopI; i++) {
-    // // System.out.println("i = "+i);
-    // for (int j = 0; j < 100 && loopJ; j++) {
-    // // System.out.println("j = "+j);
-    // p = new BigInteger(len, rand);
-    // if (p.compareTo(minLimit) < 0)
-    // p = p.add(minLimit);
-    // if (p.compareTo(maxLimit) >= 0)
-    // p = p.mod(maxLimit).add(minLimit);
-    // //System.out.println("p = "+p);
+    //     for (int i = 0; i < 300 && loopI; i++) {
+    //         // System.out.println("i = "+i);
+    //         p = new BigInteger(len, rand);
+    //         if (p.compareTo(minLimit) < 0)
+    //             p = p.add(minLimit);
+    //         if (p.compareTo(maxLimit) >= 0)
+    //             p = p.mod(maxLimit).add(minLimit);
+    //         // System.out.println("p = "+p);
 
-    // // loopJ = !lehm.testPrime(p, roundTest);
-    // if(p.mod(_two).equals(_zero))
-    // p = p.add(_one);
-    // }
-    // loopJ = true;
-    // // p = generatePrime(n);
+    //         //for cut down even number
+    //         if (p.mod(_two).equals(_zero))
+    //             p = p.add(_one);
 
-    // //check safe prime
-    // if(!lehm.testPrime(p.subtract( _one ).divide( _two ), roundTest))
-    // {
-    // //System.out.println(p+" is not safe prime");
-    // p = p.multiply( _two ).add( _one );
-    // loopI = !lehm.testPrime(p, roundTest);
-    // //System.out.println("is new p is prime? : "+(!loopI));
-    // }
-    // if(loopJ) System.out.println("Loop J is: " + loopJ);
-    // if(loopI) System.out.println("Loop I is: " + loopI);
-    // }
-    // this.p = p;
-    // jsonObject.put("p", p);
+    //         //check prime
+    //         if(!lehm.testPrime(p, roundTest)){
+    //             continue;
+    //         }
+
+    //         // check safe prime
+    //         if (!lehm.testPrime(p.subtract(_one).divide(_two), roundTest)) {
+    //             // System.out.println(p+" is not safe prime");
+    //             p = p.multiply(_two).add(_one);
+
+    //             //for break loopI
+    //             loopI = !lehm.testPrime(p, roundTest);
+    //             // System.out.println("is new p is prime? : "+(!loopI));
+    //         } else{
+    //             //break in safe prime case
+    //             loopI = false;
+    //             break;
+    //         }
+    //     }
+    //     if (loopI)
+    //         System.out.println("Loop I is: " + loopI);
+    //     this.p = p;
+    //     jsonObject.put("p", p);
     // }
 
     // Seenam's code
@@ -177,7 +182,7 @@ public class Key {
             // latch.await();
 
             try {
-                for (int i = 0; i < NUM_THREADS; i++) {
+                for (int i = 1; i <= NUM_THREADS; i++) {
                     threads[i].join();
                     // System.out.println("Thread " + i + " join");
                 }
@@ -265,12 +270,20 @@ public class Key {
 
     class SafePrimeThread extends Thread {
         private final int threadIndex;
-        int DESIRED_BYTE_LENGTH;
+        private int DESIRED_BYTE_LENGTH;
         // private static CountDownLatch latch;
+        private String upperboundString = "9";
+        private String lowerboundString = "1";
 
         public SafePrimeThread(int threadIndex, int n) {
             this.threadIndex = threadIndex;
             this.DESIRED_BYTE_LENGTH = n;
+            upperboundString = ""+threadIndex;
+            lowerboundString = ""+threadIndex;
+            for (int i = 0; i < DESIRED_BYTE_LENGTH; i++) {
+                upperboundString = upperboundString + "9"; //19999...n
+                lowerboundString = lowerboundString + "0"; //10000...n
+            }
         }
 
         // public static void setLatch(CountDownLatch latch) {
@@ -281,14 +294,8 @@ public class Key {
         public void run() {
             int roundTest = 100;
             Random rand = new Random();
-            boolean loopI = true, loopJ = true;
-
-            String upperboundString = "9";
-            String lowerboundString = "1";
-            for (int i = 0; i < DESIRED_BYTE_LENGTH; i++) {
-                upperboundString = upperboundString + "9";
-                lowerboundString = lowerboundString + "0";
-            }
+            boolean loopI = true;
+            
             BigInteger minLimit = new BigInteger(lowerboundString);
             BigInteger maxLimit = new BigInteger(upperboundString);
             maxLimit = maxLimit.subtract(minLimit);
@@ -296,42 +303,44 @@ public class Key {
             BigInteger p = _zero;
 
             for (int i = 0; i < 300 && loopI; i++) {
-                // System.out.println("i = "+i);
-                for (int j = 0; j < 100 && loopJ; j++) {
-                    // System.out.println("j = "+j);
-                    p = new BigInteger(len, rand);
-                    if (p.compareTo(minLimit) < 0)
-                        p = p.add(minLimit);
-                    if (p.compareTo(maxLimit) >= 0)
-                        p = p.mod(maxLimit).add(minLimit);
-                    // System.out.println("p = "+p);
-
-                    // loopJ = !lehm.testPrime(p, roundTest);
-                    if (p.mod(_two).equals(_zero))
-                        p = p.add(_one);
-                }
                 if (safePrime != null) {
                     // latch.countDown(); 
                     break;  
                 }
-                loopJ = true;
-                // p = generatePrime(n);
-
+                
+                // System.out.println("i = "+i);
+                p = new BigInteger(len, rand);
+                if (p.compareTo(minLimit) < 0)
+                    p = p.add(minLimit);
+                if (p.compareTo(maxLimit) >= 0)
+                    p = p.mod(maxLimit).add(minLimit);
+                // System.out.println("p = "+p);
+    
+                //for cut down even number
+                if (p.mod(_two).equals(_zero))
+                    p = p.add(_one);
+    
+                //check prime
+                if(!lehm.testPrime(p, roundTest)){
+                    continue;
+                }
+    
                 // check safe prime
                 if (!lehm.testPrime(p.subtract(_one).divide(_two), roundTest)) {
                     // System.out.println(p+" is not safe prime");
                     p = p.multiply(_two).add(_one);
+    
+                    //for break loopI
                     loopI = !lehm.testPrime(p, roundTest);
                     // System.out.println("is new p is prime? : "+(!loopI));
+                } else{
+                    //break in safe prime case
+                    loopI = false;
+                    break;
                 }
-                // if(loopJ) System.out.println("Loop J is: " + loopJ);
-                // if(loopI) System.out.println("Loop I is: " + loopI);
             }
+            // if(loopI) System.out.println("Loop I is: " + loopI);
             if (!loopI) {
-                safePrime = p;
-                System.out.println("Safe prime found in thread: " + threadIndex);
-                System.out.println("Shutting down other threads...");
-            } else if (!loopJ) {
                 safePrime = p;
                 System.out.println("Safe prime found in thread: " + threadIndex);
                 System.out.println("Shutting down other threads...");
