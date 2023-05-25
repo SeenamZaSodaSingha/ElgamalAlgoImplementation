@@ -6,7 +6,7 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Test1: Encrypt message with no key.",
+            "name": "Test1: Encrypt message with gen key.",
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",

@@ -4,8 +4,10 @@ import java.math.BigInteger;
 public class App {
     private static String outputFilePath;
     static FileOpr fileOpr = new FileOpr();
+    static long startTime = System.currentTimeMillis();
 
     public static void main(String[] args) throws Exception {
+        
         String mode = args[0];
         String encryptOrDecrypt = args[1];
         String keymode = args[2];
@@ -166,7 +168,7 @@ public class App {
     }
 
     // case user input text from command line
-    public static void encryptText(String text, Key key) throws IOException {
+    public static void encryptText(String text, Key key) throws Exception {
         BigInteger message = null;
         // System.out.println("message addr: "+message);
         message = readingMassage(text, message);
@@ -209,7 +211,7 @@ public class App {
         decryptElgamal(a, b, key);
     };
 
-    public static void encryptFile(String filePath, Key key) throws IOException {
+    public static void encryptFile(String filePath, Key key) throws Exception {
         BigInteger message = null;
         // System.out.println("message addr: "+message);
         message = readingMassage(filePath, message);
@@ -228,6 +230,7 @@ public class App {
         key.writeKeytoFile("./out/key/Encrypt_key.json");
         // fileOpr.writeByteToFile(fileBytes /* byte array after encrypt */,
         // outputFilePath);
+        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
     };
 
     public static void decryptFile(String filePath, Key key) throws IOException {
