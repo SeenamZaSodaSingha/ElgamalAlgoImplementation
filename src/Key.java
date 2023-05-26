@@ -15,6 +15,7 @@ public class Key {
     private FastExponentiation fastExpo;
     private BigInteger _zero, _one, _two;
     private BigInteger p = new BigInteger("10"), g, u, y, k, a;
+    private int blocksize;
 
     public Key() {
         lehm = new lehmenn_test();
@@ -90,6 +91,10 @@ public class Key {
         return a;
     }
 
+    public int getBlockSize() {
+        return blocksize;
+    }
+
     public void writeKeytoFile(String filePath) {
         // System.out.println("FROM WRITE KEY TO FILE");
         // System.out.println("p: " + jsonObject.getBigInteger("p"));
@@ -106,96 +111,92 @@ public class Key {
         this.g = jsonObject.getBigInteger("g");
         this.a = jsonObject.getBigInteger("a");
         this.u = jsonObject.getBigInteger("u");
+        this.blocksize = jsonObject.getInt("block_size");
     }
 
     // Beat's code
-    // public void random_P(int n) {
-    //     int roundTest = 100;
-    //     Random rand = new Random();
-    //     boolean loopI = true, loopJ = true;
+    // Copy the whole method
+    public void random_P(int n) {
+        int roundTest = 100;
+        Random rand = new Random();
+        boolean loopI = true;
+        n /= 4;
 
-    //     String upperboundString = "9";
-    //     String lowerboundString = "1";
-    //     for (int i = 0; i < n; i++) {
-    //         upperboundString = upperboundString + "9";
-    //         lowerboundString = lowerboundString + "0";
-    //     }
-    //     BigInteger minLimit = new BigInteger(lowerboundString);
-    //     BigInteger maxLimit = new BigInteger(upperboundString);
-    //     maxLimit = maxLimit.subtract(minLimit);
-    //     int len = maxLimit.bitLength();
-    //     BigInteger p = _zero;
+        int block_size = n-1;
+        this.blocksize = block_size;
+        System.out.println("block size from randomP: "+block_size);
+        jsonObject.put("block_size", block_size);
 
-    //     for (int i = 0; i < 300 && loopI; i++) {
-    //         // System.out.println("i = "+i);
-    //         p = new BigInteger(len, rand);
-    //         if (p.compareTo(minLimit) < 0)
-    //             p = p.add(minLimit);
-    //         if (p.compareTo(maxLimit) >= 0)
-    //             p = p.mod(maxLimit).add(minLimit);
-    //         // System.out.println("p = "+p);
-
-    //         //for cut down even number
-    //         if (p.mod(_two).equals(_zero))
-    //             p = p.add(_one);
-
-    //         //check prime
-    //         if(!lehm.testPrime(p, roundTest)){
-    //             continue;
-    //         }
-
-    //         // check safe prime
-    //         if (!lehm.testPrime(p.subtract(_one).divide(_two), roundTest)) {
-    //             // System.out.println(p+" is not safe prime");
-    //             p = p.multiply(_two).add(_one);
-
-    //             //for break loopI
-    //             loopI = !lehm.testPrime(p, roundTest);
-    //             // System.out.println("is new p is prime? : "+(!loopI));
-    //         } else{
-    //             //break in safe prime case
-    //             loopI = false;
-    //             break;
-    //         }
-    //     }
-    //     if (loopI)
-    //         System.out.println("Loop I is: " + loopI);
-    //     this.p = p;
-    //     jsonObject.put("p", p);
-    // }
-
-    // Seenam's code
-    public void random_P(int n) throws Exception {
-        // CountDownLatch latch = new CountDownLatch(NUM_THREADS - 1);
-        System.out.println("Generating safe prime...");
-        while (safePrime == null) {
-            Thread[] threads = new Thread[NUM_THREADS+1];
-
-            for (int i = 1; i <= NUM_THREADS; i++) {
-                threads[i] = new SafePrimeThread(i, n);
-                // SafePrimeThread.setLatch(latch);
-                threads[i].start();
-                // System.out.println("Thread " + i + " create complete");
-            }
-            System.out.println(NUM_THREADS+" threads created.");
-            System.out.println("Waiting for threads to complete...");
-            // latch.await();
-
-            try {
-                for (int i = 1; i <= NUM_THREADS; i++) {
-                    threads[i].join();
-                    // System.out.println("Thread " + i + " join");
-                }
-                System.out.println("All threads shutdown.");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        //setting for prime*2+1 = safe prime and still in bound length
+        String upperboundString = "4";
+        String lowerboundString = "5";
+        for (int i = 2; i < n; i++) {
+            upperboundString = upperboundString + "9";
+            lowerboundString = lowerboundString + "0";
         }
+        upperboundString = upperboundString + "9";
+        BigInteger minLimit = new BigInteger(lowerboundString);
+        BigInteger maxLimit = new BigInteger(upperboundString);
+        maxLimit = maxLimit.subtract(minLimit);
+        int len = maxLimit.bitLength();
+        BigInteger p =  _zero;
 
-        System.out.println("Safe Prime: " + safePrime);
+        // System.out.println("i = "+i);
+        p = new BigInteger(len, rand);
+        if (p.compareTo(minLimit) < 0)
+            p = p.add(minLimit);
+        if (p.compareTo(maxLimit) >= 0)
+            p = p.mod(maxLimit).add(minLimit);
+        // System.out.println("p = "+p);
 
-        // this.p = safePrime;
-        this.p = safePrime;
+        while(p.compareTo(maxLimit) < 0) {
+            // System.out.println(p);
+
+            //for cut down even number
+            if (p.mod(_two).equals(_zero))
+                p = p.add(_one);
+
+            //check prime
+            if(lehm.testPrime(p, roundTest)){
+                //prime
+                //change prime to safe prime even if is safe prime already
+                //lowerbound and upperbound is set for *2+1 don't mind to increase p
+                p = p.multiply(_two).add(_one);
+                if (lehm.testPrime(p, roundTest)) {
+                    System.out.println(p);
+                    System.out.println("safe prime gen p size : "+p.toString().length());
+                    break;
+                }
+                else {
+                    //not prime
+                    p = p.subtract(_one).divide(_two);
+                    p = p.add(_two);
+                }
+            }
+            else{
+                //not prime
+                p = p.add(_two);
+                continue;
+            }
+
+            // check safe prime
+            // if (!lehm.testPrime(p.subtract(_one).divide(_two), roundTest)) {
+            //     // System.out.println(p+" is not safe prime");
+            //     //p = p.multiply(_two).add(_one);
+
+            //     //for break loopI
+            //     //loopI = !lehm.testPrime(p, roundTest);
+            //     // System.out.println("is new p is prime? : "+(!loopI));
+            // } else{
+            //     //break in safe prime case
+            //     loopI = false;
+            //     break;
+            // }
+        }
+        if (loopI) {
+            System.out.println("Loop I is true");
+        }
+        this.p = p;
         jsonObject.put("p", p);
     }
 
@@ -266,96 +267,5 @@ public class Key {
     public void generateY() {
         // this.y = g.modPow(u, p);
         this.y = fastExpo.fastExponentiation(g, u, p);
-    }
-
-    class SafePrimeThread extends Thread {
-        private final int threadIndex;
-        private int DESIRED_BYTE_LENGTH;
-        // private static CountDownLatch latch;
-        private String upperboundString;
-        private String lowerboundString;
-
-        public SafePrimeThread(int threadIndex, int n) {
-            this.threadIndex = threadIndex;
-            this.DESIRED_BYTE_LENGTH = n;
-            upperboundString = "9";
-            lowerboundString = "1";
-            for (int i = 0; i < DESIRED_BYTE_LENGTH; i++) {
-                upperboundString = upperboundString + "9"; //19999...n
-                lowerboundString = lowerboundString + "0"; //10000...n
-            }
-        }
-
-        // public static void setLatch(CountDownLatch latch) {
-        //     SafePrimeThread.latch = latch;
-        // }
-
-        @Override
-        public void run() {
-            int roundTest = 100;
-            Random rand = new Random();
-            boolean loopI = true;
-            BigInteger iteration;
-            
-            BigInteger minLimit = new BigInteger(lowerboundString);
-            BigInteger maxLimit = new BigInteger(upperboundString);
-            maxLimit = maxLimit.subtract(minLimit);
-            int len = maxLimit.bitLength();
-            // BigInteger p = _zero;
-            BigInteger p = new BigInteger(len, rand);
-            if (p.compareTo(minLimit) < 0)
-                p = p.add(minLimit);
-            if (p.compareTo(maxLimit) >= 0)
-                p = p.mod(maxLimit).add(minLimit);
-            iteration = maxLimit.subtract(p);
-
-            // for (BigInteger i = new BigInteger("0"); i.compareTo(iteration) < 0 && loopI; i = i.add(_one)) {
-            while (p.compareTo(maxLimit) <= 0 && loopI) {
-                System.out.println("Loop is running...");
-                if (safePrime != null) {
-                    break;
-                }
-                
-                // System.out.println("i = "+i);
-                if (p.compareTo(minLimit) < 0)
-                    p = p.add(minLimit);
-                if (p.compareTo(maxLimit) >= 0)
-                    p = p.mod(maxLimit).add(minLimit);
-                // System.out.println("p = "+p);
-    
-                //for cut down even number
-                if (p.mod(_two).equals(_zero))
-                    p = p.add(_one);
-    
-                //check prime
-                if(!lehm.testPrime(p, roundTest)){
-                    p = p.add(_two);
-                    continue;
-                }
-    
-                // check safe prime
-                if (!lehm.testPrime(p.subtract(_one).divide(_two), roundTest)) {
-                    // System.out.println(p+" is not safe prime");
-                    p = p.multiply(_two).add(_one);
-    
-                    //for break loopI
-                    loopI = !lehm.testPrime(p, roundTest);
-                    break;
-                    // System.out.println("is new p is prime? : "+(!loopI));
-                } else{
-                    //break in safe prime case
-                    loopI = false;
-                    break;
-                }
-            }
-            // if(loopI) System.out.println("Loop I is: " + loopI);
-            if (!loopI) {
-                safePrime = p;
-                System.out.println("Safe prime found in thread: " + threadIndex);
-                System.out.println("Shutting down other threads...");
-            } else {
-                // System.out.println("Safe prime not found in thread: " + threadIndex);
-            }
-        }
     }
 }

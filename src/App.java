@@ -7,7 +7,7 @@ public class App {
     static long startTime = System.currentTimeMillis();
 
     public static void main(String[] args) throws Exception {
-        
+
         String mode = args[0];
         String encryptOrDecrypt = args[1];
         String keymode = args[2];
@@ -64,7 +64,7 @@ public class App {
                 // System.out.println("reading path: " + textOrFilePath);
                 if (fileOpr.fileExists(textOrFilePath)) {
                     byte[] file = fileOpr.readFiletoBigInteger(textOrFilePath);
-                    System.out.println("File byte size from first read: " + file.length+ " bytes");
+                    System.out.println("File byte size from first read: " + file.length + " bytes");
                     System.out.println("------------------------");
                     encryptFile(textOrFilePath, key);
                 } else {
@@ -76,7 +76,7 @@ public class App {
                 System.out.println("reading path: " + textOrFilePath);
                 if (fileOpr.fileExists(textOrFilePath)) {
                     byte[] file = fileOpr.readFiletoBigInteger(textOrFilePath);
-                    System.out.println("File byte size from first read: " + file.length+ " bytes");
+                    System.out.println("File byte size from first read: " + file.length + " bytes");
                     System.out.println("------------------------");
                     decryptFile(textOrFilePath, key);
                 } else {
@@ -109,6 +109,76 @@ public class App {
         return str;
     }
 
+    public static String paddingMsg(String msg, int blockSize){
+        String pad = "";
+        //for increse block size to same as receiver block size
+        blockSize++;
+        int lenRemining = (blockSize - msg.length()) % 10;
+        pad = ""+lenRemining;
+        System.out.println("pad : "+pad);
+        while (msg.length() < blockSize) {
+            msg = msg + pad;
+        }
+        return msg;
+    }
+
+    public static String unpaddingMsg(String msg, int blockSize){
+        int lastNum = Integer.valueOf( msg.substring( (blockSize-1) ) );
+        int count = 1;
+        //counting same num as last num
+        for (int i = blockSize-2; i > 0; i--) {
+            if ( Integer.valueOf(msg.substring(i, i+1)) == lastNum ) {
+                count++;
+            }
+            else{
+                break;
+            }
+        }
+        if (lastNum==(count % 10)) {
+            msg = msg.substring( 0, blockSize - count);
+        }
+        else if(count > 1) {
+            if (count % 10 > lastNum) {
+                //like pad 3 3byte but read last number same as 3 is 4 byte
+                //(count % 10) - lastNum should be real plaintext not padding
+                //(4%10)-1 = first 1 number should be real plaintext
+                //another 3 should be padding
+                count -= ( (count % 10) - lastNum );
+                msg = msg.substring( 0, blockSize - count);
+            }
+            // STILL BUG-------------------->
+            // else if(count % 10 < lastNum){
+            //     //like pad 3 23byte but read last number same as 3 is 32 byte
+            //     //(count%10) + (10-lastnum) should be real plaintext not padding
+            //     //(32%10)+(10-3) = first 9 number should be real plaintext
+            //     //another 23 should be padding
+            //     //---- Seenam's Debug
+            //     // System.out.println("before count : "+count);
+            //     // int blc = (count % 10) + (10 - lastNum);
+            //     // System.out.println("BLC = " + blc);
+            //     // count  = Math.abs(count-blc);
+            //     //---- Seenam's Debug
+            //     count -= ((count % 10) - (10 + lastNum));
+            //     System.out.println("(count % 10) = " + (count % 10) );
+            //     System.out.println("(10 - lastNum) = " + (10 - lastNum));
+            //     System.out.println("result inside blancket = " + (count % 10) + (10 - lastNum));
+            //     System.out.println("after count : "+count);
+            //     System.out.println("lastNum : "+lastNum);
+            // }
+            // // <---------------------------STILL BUG
+            // msg = msg.substring( 0, blockSize - count);
+        }
+        return msg;
+    }
+
+    public static String zeroPadding(String msg, int blockSize){
+        blockSize--;
+        while (msg.length() < blockSize) {
+            msg = "0"+msg;
+        }
+        return msg;
+    }
+
     public static BigInteger readingMassage(String item, BigInteger message) throws IOException {
         FileOpr fileOpr = new FileOpr();
         message = fileOpr.fileExists(item) ? new BigInteger(fileOpr.readFiletoBigInteger(item))
@@ -128,6 +198,9 @@ public class App {
 
         System.out.println("Generating a...");
         BigInteger g = key.getG(), p = key.getP(), k = key.getK(), y = key.getY();
+        int blockSize = key.getBlockSize();
+
+        System.out.println("Blocksize from ENC_ELGAMOL: " + blockSize);
         // System.out.println("g: "+g.toString() + " p: "+p.toString() + " k:
         // "+k.toString());
         // BigInteger a = g.modPow(k, p);
@@ -136,15 +209,50 @@ public class App {
         // rw.writeKeytoFile(a, "./out/key/keyA.txt");
         // System.out.println("a: "+a);
 
-        System.out.println("Encryption to b (cipher text)...");
-        // BigInteger b = y.modPow(k, p);
-        BigInteger b = fastExpo.fastExponentiation(y, k, p);
-        // System.out.println("b: "+b);
-        // System.out.println("message : "+message.toString());
-        b = b.multiply(message).mod(p);
+        String strMassage = message.toString();
+        System.out.println("strMassage : "+strMassage);
+
+        System.out.println("Encryption to b(cipher text)...");
+        String strB = "", strTemp = "";
+        BigInteger b;
+        //encrypt massage by split massage to block
+        while (strMassage != null && strMassage.length() >= blockSize) {
+            System.out.println("on operate...");
+            System.out.println("msg length remining before : "+strMassage.length());
+            System.out.println("msg length remining before : "+strMassage);
+            strTemp = strMassage.substring( 0, blockSize );
+            System.out.println("msg length remining : "+strTemp);
+            strMassage = strMassage.substring(blockSize);
+            System.out.println("msg length remining after : "+strMassage.length());
+            System.out.println("msg length remining after : "+strMassage);
+
+            //BigInteger b = y.modPow(k, p);
+            b = fastExpo.fastExponentiation(y, k, p);
+            b = b.multiply( new BigInteger( strTemp ) ).mod(p);
+            System.out.println("b after : "+b);
+            System.out.println(b.toString().length());
+            
+            strB = strB + paddingMsg( b.toString(), blockSize );
+        }
+        //encrypt last block(remining massage on block less than block size)
+        if (strMassage != null && !strMassage.equals("")) {
+            System.out.println("last operate...");
+            strMassage = paddingMsg(strMassage, blockSize-1);
+            System.out.println("msg after padding : "+strMassage);
+
+            //BigInteger b = y.modPow(k, p);
+            b = fastExpo.fastExponentiation(y, k, p);
+            b = b.multiply( new BigInteger( strMassage ) ).mod(p);
+            System.out.println("b after : "+b);
+            System.out.println(b.toString().length());
+            
+            strB = strB + paddingMsg( b.toString(), blockSize );
+        }
+        b = new BigInteger( strB );
+        System.out.println("final b length before exchange : "+b.toString().length());
         rw.writeKeytoFile(b, outputFilePath);
-        // System.out.println("b from encryption ELG: "+b.toString());
-        System.out.println("Encryption Complete!");
+        System.out.println("b : "+b);
+        System.out.println("Encryption Complete!!");
     }
 
     public static void decryptElgamal(BigInteger a, BigInteger b, Key key) throws IOException {
@@ -152,21 +260,51 @@ public class App {
         // System.out.println("Message Byte length : " + b.toString().length());
         FileOpr rw = new FileOpr();
         FastExponentiation fastExpo = new FastExponentiation();
-        
+
         BigInteger p = key.getP(), u = key.getU();
-        // System.out.println("p: " + p.toString());
-        // System.out.println("a: " + a.toString());
-        // System.out.println("u: " + u.toString());
+        System.out.println("Reading Block Size...");
+        int blockSize = key.getBlockSize() + 1;
+        System.out.println("blockSize : " + blockSize);
+        String strCipher = b.toString();
+        System.out.println("strCipher : " + strCipher);
+
         System.out.println("Decryption...");
-        // System.out.println("message b before decrypt: " + b);
-        // b = b.multiply(a.modPow(p.subtract(BigInteger.valueOf(1)).subtract(u), p));
-        b = b.multiply(fastExpo.fastExponentiation(a, p.subtract(BigInteger.valueOf(1)).subtract(u), p));
-        // System.out.println("message b before mod: " + b);
-        b = b.mod(p);
-        // System.out.println("message b after mod: " + b);
-        // System.out.println("message b after decrypt: " + b);
+        String massage = "", strTemp = "";
+        //decrypt massage by split massage to block
+        while (strCipher != null && strCipher.length() > blockSize) {
+            System.out.println("on operate...");
+            System.out.println("msg length remining : "+strCipher.length());
+            strTemp = strCipher.substring( 0, blockSize );
+            strCipher = strCipher.substring(blockSize);
+
+            b = new BigInteger( unpaddingMsg( strTemp, blockSize ) );
+            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) , p) );
+            b = b.multiply( fastExpo.fastExponentiation(a, p.subtract( BigInteger.valueOf(1) ).subtract(u), p) );
+            b = b.mod(p);
+            System.out.println(b.toString().length());
+            System.out.println(b.toString());
+            
+            massage = massage + zeroPadding(b.toString(), blockSize);
+        }
+        //decrypt last block(remining massage on block less than block size)
+        if (strCipher != null && !strCipher.equals("")) {
+            System.out.println("last operate...");
+            b = new BigInteger( unpaddingMsg( strCipher, blockSize ) );
+            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) , p) );
+            b = b.multiply( fastExpo.fastExponentiation(a, p.subtract( BigInteger.valueOf(1) ).subtract(u), p) );
+            b = b.mod(p);
+            strCipher = zeroPadding(b.toString(), blockSize);
+            strCipher = unpaddingMsg(strCipher, blockSize-1);
+            System.out.println(strCipher.length());
+            
+            massage = massage + strCipher;
+        }
+
+        b = new BigInteger(massage);
+        System.out.println("massage : "+b);
+        System.out.println("Massage Byte length : "+b.toString().length());
         rw.writeBytetoFile(b, outputFilePath);
-        System.out.println("Decryption Complete!");
+        System.out.println("Decryption Complete!!");
     }
 
     // case user input text from command line
@@ -187,10 +325,15 @@ public class App {
         System.out.println("Generating y...");
         key.generateY();
         // encryption process
+        /*
+         * Generate signature
+         * Sign before encrypt
+         * Put at the head of file 
+         */
         System.out.println("Encrypting message: " + text);
         encryptElgamal(message, key);
         key.writeKeytoFile("./out/key/Encrypt_key.json");
-        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
+        System.out.println("Task complete in " + (System.currentTimeMillis() - startTime) / 1000 + " seconds");
         // fileOpr.writeByteToFile(text.getBytes()/* byte array after encrypt */,
         // outputFilePath);
     };
@@ -210,9 +353,14 @@ public class App {
         // BigInteger a = rw.readKeytoBigInteger("./out/key/keyA.txt");
         BigInteger a = key.getA();
         BigInteger b = rw.readKeytoBigInteger(text);
+        /*
+         * Read signature
+         * Validate signature
+         * Decrypt
+         */
         System.out.println("Decrypting text: " + text);
         decryptElgamal(a, b, key);
-        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
+        System.out.println("Task complete in " + (System.currentTimeMillis() - startTime) / 1000 + " seconds");
     };
 
     public static void encryptFile(String filePath, Key key) throws Exception {
@@ -229,12 +377,17 @@ public class App {
         key.random_K();
         key.generateY();
         // encryption process
+        /*
+         * Generate signature
+         * Sign before encrypt
+         * Put at the head of file 
+         */
         System.out.println("Encrypting file: " + filePath);
         encryptElgamal(message, key);
         key.writeKeytoFile("./out/key/Encrypt_key.json");
         // fileOpr.writeByteToFile(fileBytes /* byte array after encrypt */,
         // outputFilePath);
-        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
+        System.out.println("Task complete in " + (System.currentTimeMillis() - startTime) / 1000 + " seconds");
     };
 
     public static void decryptFile(String filePath, Key key) throws IOException {
@@ -244,15 +397,21 @@ public class App {
         // key.setU(rw.readKeytoBigInteger("./test/key/keyU.txt"));
         BigInteger a = key.getA();
         BigInteger b = rw.readKeytoBigInteger(filePath);
-        // System.out.println("File length from decrypt file method: " + b.toString().length()); // 46
+        // System.out.println("File length from decrypt file method: " +
+        // b.toString().length()); // 46
         // System.out.println("message from decrypt file method: " + b.toString());
         // System.out.println("------------------------");
         /*
          * DECRYPTION IMLPEMENTATION
          */
+        /*
+         * Read signature
+         * Validate signature
+         * Decrypt
+         */
         System.out.println("Decrypting file: " + filePath);
         decryptElgamal(a, b, key);
-        System.out.println("Task complete in "+(System.currentTimeMillis() - startTime)/1000 + " seconds");
+        System.out.println("Task complete in " + (System.currentTimeMillis() - startTime) / 1000 + " seconds");
         // writeTextToFile("file", filePath);
         // fileOpr.writeByteToFile(fileBytes /* byte array after decrypt */,
         // outputFilePath);
