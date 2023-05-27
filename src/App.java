@@ -147,26 +147,26 @@ public class App {
                 msg = msg.substring( 0, blockSize - count);
             }
             // STILL BUG-------------------->
-            // else if(count % 10 < lastNum){
-            //     //like pad 3 23byte but read last number same as 3 is 32 byte
-            //     //(count%10) + (10-lastnum) should be real plaintext not padding
-            //     //(32%10)+(10-3) = first 9 number should be real plaintext
-            //     //another 23 should be padding
-            //     //---- Seenam's Debug
-            //     // System.out.println("before count : "+count);
-            //     // int blc = (count % 10) + (10 - lastNum);
-            //     // System.out.println("BLC = " + blc);
-            //     // count  = Math.abs(count-blc);
-            //     //---- Seenam's Debug
-            //     count -= ((count % 10) - (10 + lastNum));
-            //     System.out.println("(count % 10) = " + (count % 10) );
-            //     System.out.println("(10 - lastNum) = " + (10 - lastNum));
-            //     System.out.println("result inside blancket = " + (count % 10) + (10 - lastNum));
-            //     System.out.println("after count : "+count);
-            //     System.out.println("lastNum : "+lastNum);
-            // }
-            // // <---------------------------STILL BUG
-            // msg = msg.substring( 0, blockSize - count);
+            else if(count % 10 < lastNum){
+                //like pad 3 23byte but read last number same as 3 is 32 byte
+                //(count%10) + (10-lastnum) should be real plaintext not padding
+                //(32%10)+(10-3) = first 9 number should be real plaintext
+                //another 23 should be padding
+                //---- Seenam's Debug
+                // System.out.println("before count : "+count);
+                // int blc = (count % 10) + (10 - lastNum);
+                // System.out.println("BLC = " + blc);
+                // count  = Math.abs(count-blc);
+                //---- Seenam's Debug
+                count -= ((count % 10) - (10 + lastNum));
+                System.out.println("(count % 10) = " + (count % 10) );
+                System.out.println("(10 - lastNum) = " + (10 - lastNum));
+                System.out.println("result inside blancket = " + (count % 10) + (10 - lastNum));
+                System.out.println("after count : "+count);
+                System.out.println("lastNum : "+lastNum);
+            }
+            // <---------------------------STILL BUG
+            msg = msg.substring( 0, blockSize - count);
         }
         return msg;
     }
@@ -264,45 +264,56 @@ public class App {
         BigInteger p = key.getP(), u = key.getU();
         System.out.println("Reading Block Size...");
         int blockSize = key.getBlockSize() + 1;
-        System.out.println("blockSize : " + blockSize);
+        System.out.println("blockSize: " + blockSize);
         String strCipher = b.toString();
-        System.out.println("strCipher : " + strCipher);
+        System.out.println("strCipher: " + strCipher);
+        System.out.println("-------------------------------------------------------");
 
         System.out.println("Decryption...");
         String massage = "", strTemp = "";
-        //decrypt massage by split massage to block
+        // decrypt massage by split massage to block
         while (strCipher != null && strCipher.length() > blockSize) {
-            System.out.println("on operate...");
-            System.out.println("msg length remining : "+strCipher.length());
-            strTemp = strCipher.substring( 0, blockSize );
+            System.out.println("Operating...");
+            System.out.println("cipher length remining: " + strCipher.length());
+            strTemp = strCipher.substring(0, blockSize);
             strCipher = strCipher.substring(blockSize);
 
-            b = new BigInteger( unpaddingMsg( strTemp, blockSize ) );
-            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) , p) );
-            b = b.multiply( fastExpo.fastExponentiation(a, p.subtract( BigInteger.valueOf(1) ).subtract(u), p) );
+            b = new BigInteger(unpaddingMsg(strTemp, blockSize));
+            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) ,
+            // p) );
+            b = b.multiply(fastExpo.fastExponentiation(a, p.subtract(BigInteger.valueOf(1)).subtract(u), p));
             b = b.mod(p);
-            System.out.println(b.toString().length());
-            System.out.println(b.toString());
-            
-            massage = massage + zeroPadding(b.toString(), blockSize);
+            System.out.println("Plaintext length: " + b.toString().length());
+            System.out.println("Decipher text: " + b.toString());
+
+            massage = zeroPadding(b.toString(), blockSize) + massage;
+            System.out.println("-------------------------------------------------------");
         }
-        //decrypt last block(remining massage on block less than block size)
+        // decrypt last block(remining massage on block less than block size)
         if (strCipher != null && !strCipher.equals("")) {
-            System.out.println("last operate...");
-            b = new BigInteger( unpaddingMsg( strCipher, blockSize ) );
-            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) , p) );
-            b = b.multiply( fastExpo.fastExponentiation(a, p.subtract( BigInteger.valueOf(1) ).subtract(u), p) );
+            System.out.println("Last operation...");
+            System.out.println("cipher length remining: " + strCipher.length());
+            strTemp = strCipher.substring(0, blockSize);
+            System.out.println("Str Temp: " + strTemp);
+            strCipher = strCipher.substring(blockSize);
+            System.out.println("Str Cipher: " + strCipher);
+            b = new BigInteger(unpaddingMsg(strTemp, blockSize));
+            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) ,
+            // p) );
+            b = b.multiply(fastExpo.fastExponentiation(a, p.subtract(BigInteger.valueOf(1)).subtract(u), p));
             b = b.mod(p);
             strCipher = zeroPadding(b.toString(), blockSize);
-            strCipher = unpaddingMsg(strCipher, blockSize-1);
-            System.out.println(strCipher.length());
-            
+            System.out.println("Str after zero padding: " + strCipher);
+            strCipher = unpaddingMsg(strCipher, blockSize - 1);
+            System.out.println("Str after unpadding: " + strCipher);
+            System.out.println("Str after unpadding length: " + strCipher.length());
+
             massage = massage + strCipher;
         }
 
         b = new BigInteger(massage);
-        System.out.println("massage : "+b);
-        System.out.println("Massage Byte length : "+b.toString().length());
+        System.out.println("massage : " + b);
+        System.out.println("Massage Byte length : " + b.toString().length());
         rw.writeBytetoFile(b, outputFilePath);
         System.out.println("Decryption Complete!!");
     }
