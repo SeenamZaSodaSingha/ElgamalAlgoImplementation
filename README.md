@@ -12,7 +12,7 @@
 You can run the program by using the following command.
 
 ```bash
-java app.java inputMode encrypt/decryptMode keyMode key input output
+java app.java inputMode encrypt/decryptMode keyMode blockSize key input output
 ```
 - input mode
 
@@ -30,6 +30,10 @@ java app.java inputMode encrypt/decryptMode keyMode key input output
     `-k` for key input
 
     `-gen` for key generation key
+
+- Block size
+    
+    Input block size in bit for encryption mode (e.g., 32, 64)
 
 - key
 
