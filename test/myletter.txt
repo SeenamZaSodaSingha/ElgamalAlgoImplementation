@@ -1,4 +1,3 @@
 My message is: Lorem Ipsum Dolor Sit Amet
 My message is: Lorem Ipsum Dolor Sit Amet
 My message is: Lorem Ipsum Dolor Sit Amet
-DOLOR
