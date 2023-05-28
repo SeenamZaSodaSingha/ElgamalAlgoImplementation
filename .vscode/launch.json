@@ -18,7 +18,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
-            "args": "-f -e -gen ./test/myletter.txt ./out/messageEncOut.txt"
+            "args": "-f -e -gen 64 ./test/myletter.txt ./out/messageEncOut.txt"
         },
         {
             "type": "java",
@@ -34,7 +34,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
-            "args": "-f -e -gen ./test/22.png ./out/image_encrypt_out.png"
+            "args": "-f -e -gen 256 ./test/22.png ./out/image_encrypt_out.png"
         },
         {
             "type": "java",
