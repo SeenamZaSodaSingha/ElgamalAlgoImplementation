@@ -186,6 +186,7 @@ public class App {
     public static void encryptElgamal(BigInteger message, Key key) throws IOException {
         FileOpr rw = new FileOpr();
         FastExponentiation fastExpo = new FastExponentiation();
+        padding pad = new padding();
 
         System.out.println("Generating a...");
         BigInteger g = key.getG(), p = key.getP(), k = key.getK(), y = key.getY();
@@ -205,40 +206,58 @@ public class App {
 
         System.out.println("Encryption to b(cipher text)...");
         String strB = "", strTemp = "";
-        BigInteger b;
+        BigInteger b, signBit = new BigInteger("0");
         // encrypt massage by split massage to block
         while (strMassage != null && strMassage.length() >= blockSize) {
             System.out.println("Operating...");
-            System.out.println("message length remining before: " + strMassage.length());
-            // System.out.println("msg length remining before : "+strMassage);
-            strTemp = strMassage.substring(0, blockSize);
-            System.out.println("message length remining: " + strTemp);
+            System.out.println("msg length remining before : "+strMassage.length());
+
+            //System.out.println("msg length remining before : "+strMassage);
+            strTemp = strMassage.substring( 0, blockSize );
+
+            System.out.println("msg in this block : "+strTemp);
+
             strMassage = strMassage.substring(blockSize);
-            System.out.println("message length remining after: " + strMassage.length());
-            System.out.println("message length remining after: " + strMassage);
 
-            // BigInteger b = y.modPow(k, p);
+            System.out.println("msg length remining after : "+strMassage.length());
+            System.out.println("msg length remining after : "+strMassage);
+
+            //BigInteger b = y.modPow(k, p);
             b = fastExpo.fastExponentiation(y, k, p);
-            b = b.multiply(new BigInteger(strTemp)).mod(p);
-            System.out.println("message encrypt in bigint: " + b);
-            System.out.println("message encrypt length: " + b.toString().length());
+            b = b.multiply( new BigInteger( strTemp ) ).mod(p);
+            if (b.toString().length() == blockSize + 1 &&
+                b.mod( BigInteger.valueOf(10) ).equals( BigInteger.valueOf( 1 ) )) {
+                signBit = signBit.add( BigInteger.valueOf( 1 ) );
+            }
 
-            strB = strB + paddingMsg(b.toString(), blockSize);
+            System.out.println("msg encrypt (bigint) : "+b);
+            System.out.println("msg encrypt length : "+b.toString().length());
+            
+            strB = strB + pad.paddingMsg( b.toString(), blockSize ) + signBit.toString();
+            signBit = new BigInteger("0");
         }
         // encrypt last block(remining massage on block less than block size)
         if (strMassage != null && !strMassage.equals("")) {
-            System.out.println("last operation...");
-            System.out.println("message before padding: " + strMassage);
-            strMassage = paddingMsg(strMassage, blockSize - 1);
-            System.out.println("message after padding: " + strMassage);
 
-            // BigInteger b = y.modPow(k, p);
+            System.out.println("last operate...");
+            System.out.println("msg before padding : "+strMassage);
+
+            strMassage = pad.paddingMsg(strMassage, blockSize-1);
+
+            System.out.println("msg after padding : "+strMassage);
+
+            //BigInteger b = y.modPow(k, p);
             b = fastExpo.fastExponentiation(y, k, p);
-            b = b.multiply(new BigInteger(strMassage)).mod(p);
-            System.out.println("message encrypt in bigint: " + b);
-            System.out.println("message encrypt length: " + b.toString().length());
+            b = b.multiply( new BigInteger( strMassage ) ).mod(p);
+            if (b.toString().length() == blockSize + 1 &&
+                b.mod( BigInteger.valueOf(10) ).equals( BigInteger.valueOf( 1 ) )) {
+                signBit = signBit.add( BigInteger.valueOf( 1 ) );
+            }
 
-            strB = strB + paddingMsg(b.toString(), blockSize);
+            System.out.println("msg encrypt (bigint) : "+b);
+            System.out.println("msg encrypt length : "+b.toString().length());
+            
+            strB = strB + pad.paddingMsg( b.toString(), blockSize ) + signBit.toString();
         }
         b = new BigInteger(strB);
         System.out.println("final b length before exchange: " + b.toString().length());
@@ -252,6 +271,7 @@ public class App {
         // System.out.println("Message Byte length : " + b.toString().length());
         FileOpr rw = new FileOpr();
         FastExponentiation fastExpo = new FastExponentiation();
+        padding pad = new padding();
 
         BigInteger p = key.getP(), u = key.getU();
         System.out.println("Reading Block Size...");
@@ -264,60 +284,80 @@ public class App {
         System.out.println("Decryption...");
         String massage = "", strTemp = "";
         // decrypt massage by split massage to block
-        while (strCipher != null && strCipher.length() > blockSize) {
-            System.out.println("operation...");
-            System.out.println("message length remining : " + strCipher.length());
-            strTemp = strCipher.substring(0, blockSize);
+        while (strCipher != null && strCipher.length() > blockSize + 1) {
 
-            System.out.println("message cipher this block: " + strTemp);
-            System.out.println("message cipher length: " + strTemp.length());
+            System.out.println("Operating...");
+            System.out.println("message length remining: "+strCipher.length());
+
+            strTemp = strCipher.substring( 0, blockSize );
+
+            System.out.println("message cipher this block: "+strTemp);
+            System.out.println("message cipher length: "+strTemp.length());
 
             strCipher = strCipher.substring(blockSize);
+            if (strCipher.charAt(0) == '1') {
+                b = new BigInteger(strTemp);
+            }
+            else {
+                b = new BigInteger( pad.unpaddingMsg( strTemp, blockSize ) );
+            }
+            strCipher = strCipher.substring(1);
+            
+            //b = new BigInteger( pad.unpaddingMsg( strTemp, blockSize ) );
 
-            b = new BigInteger(unpaddingMsg(strTemp, blockSize));
+            System.out.println("message cipher unpadding: "+b);
 
-            System.out.println("message cipher after unpadding: " + b);
-            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) ,
-            // p) );
-            b = b.multiply(fastExpo.fastExponentiation(a, p.subtract(BigInteger.valueOf(1)).subtract(u), p));
+            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) , p) );
+            b = b.multiply( fastExpo.fastExponentiation(a, p.subtract( BigInteger.valueOf(1) ).subtract(u), p) );
             b = b.mod(p);
 
-            System.out.println("message decrypt length: " + b.toString().length());
-            System.out.println("message decrypt: " + b.toString());
-
-            massage = massage + zeroPadding(b.toString(), blockSize);
+            System.out.println("message decrypt length: "+b.toString().length());
+            System.out.println("message decrypt: "+b.toString());
+            
+            massage = massage + pad.zeroPadding(b.toString(), blockSize);
+            System.out.println("=======================================================");
         }
         // decrypt last block(remining massage on block less than block size)
         if (strCipher != null && !strCipher.equals("")) {
-            System.out.println("last operate...");
-            System.out.println("message this block: " + strCipher);
-            System.out.println("message cipher length: " + strTemp.length());
 
-            b = new BigInteger(unpaddingMsg(strCipher, blockSize));
+            System.out.println("last operation...");
+            System.out.println("message cipher this block: "+strCipher);
+            System.out.println("message cipher length: "+strCipher.length());
 
-            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) ,
-            // p) );
-            b = b.multiply(fastExpo.fastExponentiation(a, p.subtract(BigInteger.valueOf(1)).subtract(u), p));
+            if (strCipher.charAt(blockSize) == '1') {
+                strCipher = strCipher.substring(0, blockSize);
+                b = new BigInteger(strCipher);
+            }
+            else {
+                strCipher = strCipher.substring(0, blockSize);
+                b = new BigInteger( pad.unpaddingMsg( strCipher, blockSize ) );
+            }
+            //b = new BigInteger( pad.unpaddingMsg( strCipher, blockSize ) );
+
+            System.out.println("message cipher unpadding: "+b);
+
+            // b = b.multiply( a.modPow( p.subtract( BigInteger.valueOf(1) ).subtract(u) , p) );
+            b = b.multiply( fastExpo.fastExponentiation(a, p.subtract( BigInteger.valueOf(1) ).subtract(u), p) );
             b = b.mod(p);
 
-            System.out.println("message decrypt length: " + b.toString().length());
-            System.out.println("message decrypt: " + b.toString());
+            System.out.println("message decrypt length: "+b.toString().length());
+            System.out.println("message decrypt: "+b.toString());
 
-            strCipher = zeroPadding(b.toString(), blockSize);
-            strCipher = unpaddingMsg(strCipher, blockSize - 1);
+            strCipher = pad.zeroPadding(b.toString(), blockSize);
+            strCipher = pad.unpaddingMsg(strCipher, blockSize-1);
             System.out.println(strCipher.length());
-
-            System.out.println("real message decrypt length: " + strCipher.toString().length());
-            System.out.println("real message decrypt: " + strCipher.toString());
+            
+            System.out.println("real message decrypt length: "+strCipher.toString().length());
+            System.out.println("real message decrypt: "+strCipher.toString());
 
             massage = massage + strCipher;
         }
 
         b = new BigInteger(massage);
-        System.out.println("massage: " + b);
+        System.out.println("message: " + b);
         System.out.println("Massage Byte length: " + b.toString().length());
         rw.writeBytetoFile(b, outputFilePath);
-        System.out.println("Decryption Complete!!");
+        System.out.println("Decryption Complete!");
     }
 
     // case user input text from command line
