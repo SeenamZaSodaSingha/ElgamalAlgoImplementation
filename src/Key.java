@@ -5,9 +5,6 @@ import java.util.Random;
 import org.json.JSONObject;
 
 public class Key {
-    private final int NUM_THREADS = 1;
-    private volatile BigInteger safePrime;
-
     private JSONObject jsonObject = new JSONObject();
     private FileOpr fileOpr = new FileOpr();
     private lehmenn_test lehm;
