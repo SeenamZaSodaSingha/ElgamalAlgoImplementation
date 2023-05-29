@@ -2,7 +2,8 @@ import java.math.BigInteger;
 import java.util.Random;
 
 public class SignAlgorithm {
-    public BigInteger p, alpha, beta, m, r, s, k;
+    private BigInteger p, alpha, beta, m, r, s, k;
+	private gcdExtended gcdE = new gcdExtended();
 	
 	/*
 	 * p -> use the same with message
@@ -10,25 +11,39 @@ public class SignAlgorithm {
 	 * alpha -> g
 	 * m -> message
 	 */
-    private BigInteger z = BigInteger.valueOf(16); //between 1 -p-1 after get z and p-1 are coprime
+	//private key relate to p as coprime
+    // private BigInteger z = new BigInteger("16"); //between 1 -p-1 after get z and p-1 are coprime
+    private BigInteger z; //between 1 -p-1 after get z and p-1 are coprime
 	
 
-    SignAlgorithm(BigInteger a, BigInteger b, BigInteger c, BigInteger d) { // p, g, message, k
-        p = a;
-        alpha = b;
-        beta = new FastExponentiation().fastExponentiation(alpha, z, p);
-        m = c;
-        k = d;
+    SignAlgorithm(BigInteger p, BigInteger g, BigInteger c, BigInteger d, BigInteger u, BigInteger y) { // p, g, message, k
+        this.p = p;
+        this.alpha = g;
+		this.m = c;
+        this.k = d;
+		this.z = u;
+
+        beta = y;
+		System.out.println("u from sign: " + z);
+		System.out.println("p from sign: " + p);
+		System.out.println("alpha from sign: " + alpha);
+		System.out.println("beta from sign: " + beta);
+		System.out.println("m from sign: " + m);
+		System.out.println("k from sign: " + k);
+
         r = createR(alpha, k); // concat w/message
         s = createS(); //concat w/message
 		
     }
 
-    BigInteger createR(BigInteger b, BigInteger c) {
-        return new FastExponentiation().fastExponentiation(b, c, p);
+	public BigInteger getBeta() {
+		return beta;
+	}
+
+    BigInteger createR(BigInteger g, BigInteger k) { //g ,k
+        return new FastExponentiation().fastExponentiation(g, k, p);
     }
 
-	// does this need to fix?
 	boolean gcd(BigInteger a, BigInteger b) {
 		BigInteger x = BigInteger.ZERO, y = BigInteger.ONE, lastx = BigInteger.ONE, lasty = BigInteger.ZERO, temp;
 		while (!b.equals(BigInteger.ZERO)) {

@@ -1,6 +1,8 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -89,6 +91,36 @@ public class FileOpr {
         }
     }
 
+    public void writeSignatureToFile(BigInteger massage, String filePath) throws IOException
+    {
+        try (FileOutputStream fos = new FileOutputStream(filePath, true)) {
+            fos.write(massage.toString().getBytes(Charset.forName("UTF-8")));
+            fos.close();
+        }
+    }
+
+    public void writeHashToFile(String massage, String filePath) throws IOException
+    {
+        try (FileOutputStream fos = new FileOutputStream(filePath, true)) {
+            fos.write(massage.toString().getBytes(Charset.forName("UTF-8")));
+            fos.close();
+        }
+    }
+
+    public String readHashFromFile(String filePath) throws IOException
+    {   
+        String hash = "", line = "";
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            line = reader.readLine();
+            hash = line.substring(line.length()-64, line.length());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writeStringtoFile(line.substring(0, line.length()-64), filePath);
+        System.out.println("line write to file: " + line.substring(0, line.length()-64));
+        return hash;
+    }
+
     public BigInteger readKeytoBigInteger(String filePath) throws IOException
     {
         Path path = Paths.get(filePath);
@@ -96,11 +128,18 @@ public class FileOpr {
         return bigInt;
     }
 
-    // write b to file
-    public void writeKeytoFile(BigInteger massage, String fileName) throws IOException
+    public void writeStringtoFile(String massage, String filePath) throws IOException
     {
-        fileName = "./"+fileName;
-        try (FileOutputStream fos = new FileOutputStream(fileName)) {
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            fos.write(massage.getBytes(Charset.forName("UTF-8")));
+            fos.close();
+        }
+    }
+
+    // write b to file
+    public void writeKeytoFile(BigInteger massage, String filePath) throws IOException
+    {
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
             fos.write(massage.toString().getBytes(Charset.forName("UTF-8")));
             fos.close();
         }

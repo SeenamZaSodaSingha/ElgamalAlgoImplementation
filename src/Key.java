@@ -108,6 +108,7 @@ public class Key {
         this.g = jsonObject.getBigInteger("g");
         this.a = jsonObject.getBigInteger("a");
         this.u = jsonObject.getBigInteger("u");
+        this.y = jsonObject.getBigInteger("y");
         this.blocksize = jsonObject.getInt("block_size");
     }
 
@@ -214,8 +215,8 @@ public class Key {
         // g^(p-1)/2 % p must != 1
         // if g^(p-1)/2 % p = 1 then g = p-g
         // if( g.modPow(p.subtract( _one ).divide( _two ), p).equals( _one ) )
-        g = fastExpo.fastExponentiation(g, p.subtract(_one).divide(_two), p);
-        if (g.equals(_one))
+        // g = fastExpo.fastExponentiation(g, p.subtract(_one).divide(_two), p);
+        if (fastExpo.fastExponentiation(g, p.subtract(_one).divide(_two), p).equals(_one))
             g = p.subtract(g);
         this.g = g;
         jsonObject.put("g", g);
@@ -264,5 +265,7 @@ public class Key {
     public void generateY() {
         // this.y = g.modPow(u, p);
         this.y = fastExpo.fastExponentiation(g, u, p);
+        // System.out.println("y from generate y = "+y);
+        jsonObject.put("y", y);
     }
 }
