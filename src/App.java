@@ -195,6 +195,7 @@ public class App {
     // ----------------------------------------------------------------
     // <<----------------- HASH OPERAITON    ----------------->>
     public static byte[] getSHA(String input) throws NoSuchAlgorithmException {
+        System.out.println("input from getSha: " + input);
         // Static getInstance method is called with hashing SHA
         MessageDigest md = MessageDigest.getInstance("SHA-256");
 
@@ -217,6 +218,18 @@ public class App {
         }
 
         return hexString.toString();
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        byte[] positiveBytes = new byte[bytes.length + 1];
+        System.arraycopy(bytes, 0, positiveBytes, 1, bytes.length);
+        BigInteger positiveBigInt = new BigInteger(positiveBytes);
+    
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
     }
     // <<----------------- END OF HASH OPERATION ----------------->>
     // ----------------------------------------------------------------
@@ -307,7 +320,7 @@ public class App {
         System.out.println("Encryption Complete!");
     }
 
-    public static void decryptElgamal(BigInteger a, BigInteger b, Key key) throws IOException {
+    public static BigInteger decryptElgamal(BigInteger a, BigInteger b, Key key) throws IOException {
         // System.out.println("b from decrypt ELG: " + b.toString());
         // System.out.println("Message Byte length : " + b.toString().length());
         FileOpr rw = new FileOpr();
@@ -385,6 +398,7 @@ public class App {
             b = b.mod(p);
 
             System.out.println("message decrypt length: " + b.toString().length());
+            System.out.println("This is line 389");
             System.out.println("message decrypt: " + b.toString());
 
             strCipher = pad.zeroPadding(b.toString(), blockSize);
@@ -402,6 +416,7 @@ public class App {
         
         rw.writeBytetoFile(b, outputFilePath);
         System.out.println("Decryption Complete!");
+        return b;
     }
 
     // case user input text from command line
@@ -464,10 +479,10 @@ public class App {
         padding pad = new padding();
         // System.out.println("message addr: "+message);
         message = readingMassage(filePath, message); // read as byte
-        String msgHash = toHexString(getSHA(message.toString())); //estimate 4 blocks
-        BigInteger msgHashBigInt = new BigInteger(msgHash, 16);
-        System.out.println("message hash: " + msgHash);
-        System.out.println("message hash length: " + msgHash.length()/4 + " bytes");
+        // String msgHash = toHexString(getSHA(message.toString()));
+        BigInteger msgHashBigInt = new BigInteger(bytesToHex(getSHA(message.toString())), 16);
+        System.out.println("message hash: " + msgHashBigInt);
+        System.out.println("message hash length: " + msgHashBigInt.toString().length() + " bytes");
 
         System.out.println("File length from encrypt file method: " + bitLength); // 46
         // System.out.println("message from encrypt file method: "+message.toString());
@@ -500,15 +515,26 @@ public class App {
         BigInteger r = sign.createR(key.getG(), key.getK());
         System.out.println("s before pad: " + s);
         System.out.println("r before pad: " + r);
-        // System.out.println("s length: " + s.toString().length());
-        s = new BigInteger(pad.paddingMsg(s.toString(), 15));
+        String tmp;
+        tmp = pad.paddingMsg(s.toString(), key.getBlockSize());
+        tmp = tmp + pad.isPad();
+        pad.resetStatus();
+        // s = new BigInteger(pad.paddingMsg(s.toString(), key.getBlockSize()));
+        s = new BigInteger(tmp);
+        System.out.println("s after pad: " + s);
         // s = new BigInteger(s.toString());
         // System.out.println("s after pad: " + s);
         // System.out.println("s length: " + s.toString().length());
         // System.out.println("------------------------");
         
         // System.out.println("r length: " + r.toString().length());
-        r = new BigInteger(pad.paddingMsg(r.toString(), 15));
+        tmp = pad.paddingMsg(r.toString(), key.getBlockSize());
+        tmp = tmp + pad.isPad();
+        pad.resetStatus();
+        r = new BigInteger(tmp);
+
+        System.out.println("s length: " + s.toString().length());
+        System.out.println("r length: " + r.toString().length());
         // r = new BigInteger(r.toString());
         // System.out.println("r: " + r);
         // System.out.println("s: " + s);
@@ -526,8 +552,8 @@ public class App {
 
     public static void decryptFile(String filePath, Key key) throws IOException, NoSuchAlgorithmException {
         FileOpr rw = new FileOpr();
-        // padding pad = new padding();
-        BigInteger s, r;
+        padding pad = new padding();
+        BigInteger s = BigInteger.ZERO, r = BigInteger.ZERO;
         // read key from file
         // key.setP(rw.readKeytoBigInteger("./test/key/keyP.txt"));
         // key.setU(rw.readKeytoBigInteger("./test/key/keyU.txt"));
@@ -542,8 +568,9 @@ public class App {
         System.out.println("Blocksize: " + key.getBlockSize());
         System.out.println("b: " + b);
         int messageLength = b.toString().length();
-        String signature = b.toString().substring(messageLength-32, messageLength);
-        BigInteger message = new BigInteger(b.toString().substring(0, messageLength-32));
+        String signatureR = b.toString().substring(messageLength-((key.getBlockSize()+2)*2), messageLength-((key.getBlockSize()+2)));
+        String signatureS = b.toString().substring(messageLength-(key.getBlockSize()+2), messageLength);
+        BigInteger message = new BigInteger(b.toString().substring(0, messageLength-((key.getBlockSize()+2)*2)));
         System.out.println("message aft sub signature: " + message);
         /*
          * Read signature
@@ -551,14 +578,35 @@ public class App {
          * Decrypt
          */
         // System.out.println("signature: " + signature);
-        r = new BigInteger(signature.substring(0, 16));
-        s = new BigInteger(signature.substring(16, 32));
+        
+        if (signatureR.charAt(key.getBlockSize()+1) == '0') {
+            System.out.println("non-unpadding");
+            signatureR = signatureR.substring(0, key.getBlockSize()+1);
+            r = new BigInteger(signatureR);
+        }
+        else {
+            signatureR = signatureR.substring(0, key.getBlockSize()+1);
+            r = new BigInteger(pad.unpaddingMsg(signatureR, key.getBlockSize()+1 ));
+        }
+        
+        // r = new BigInteger(pad.unpaddingMsg(r.toString(), key.getBlockSize()+1));
+        // s = new BigInteger(signatureS.substring(key.getBlockSize()+2));
+        if (signatureS.charAt(key.getBlockSize()+1) == '0') {
+            System.out.println("non-unpadding");
+            signatureS = signatureS.substring(0, key.getBlockSize()+1);
+            s = new BigInteger(signatureS);
+        }
+        else {
+            signatureS = signatureS.substring(0, key.getBlockSize()+1);
+            s = new BigInteger(pad.unpaddingMsg(signatureS, key.getBlockSize()+1 ));
+        }
+        // s = new BigInteger(pad.unpaddingMsg(s.toString(), key.getBlockSize()+1));
         // s = new BigInteger(pad.unpaddingMsg(s.toString(), 16));
         System.out.println("s: " + s);
-        System.out.println("s length: " + s.toString().length());
+        System.out.println("s length after unp: " + s.toString().length());
         System.out.println("r: " + r);
-        System.out.println("r length: " + r.toString().length());
-        System.out.println("signature: " + signature);
+        System.out.println("r length after uno: " + r.toString().length());
+        // System.out.println("signature: " + signature);
         System.out.println("Message: "  + message.toString().length());
         // System.out.println("p dec: " + key.getP());
         // System.out.println("g dec: " + key.getG());
@@ -570,9 +618,10 @@ public class App {
         System.out.println("Decrypting file: " + filePath);
         // b = new BigInteger(b.toString().substring(0, messageLength-32));
         System.out.println("b: " + b);
-        decryptElgamal(a, message, key);
-        String msgHash = toHexString(getSHA(b.toString())); //estimate 4 blocks
-        BigInteger msgHashBigInt = new BigInteger(msgHash, 16);
+        BigInteger deCipherText = decryptElgamal(a, message, key);
+        System.out.println("B after decrypt: " + deCipherText.toString());
+        BigInteger msgHashBigInt = new BigInteger(bytesToHex(getSHA(deCipherText.toString())), 16);
+        System.out.println("msgHashBigInt: " + msgHashBigInt);
         verify = new Verify(key.getP(), key.getG(), key.getY(), msgHashBigInt, r, s);
         System.out.println("Verify: " + verify.verifySignature());
 
