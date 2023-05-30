@@ -24,13 +24,21 @@ public class Key {
     }
 
     public Key(String path) throws IOException {
-        // will fix to read accept key from file
         lehm = new lehmenn_test();
         gcdE = new gcdExtended();
         _zero = BigInteger.valueOf(0);
         _one = BigInteger.valueOf(1);
         _two = BigInteger.valueOf(2);
         readKeyFromFile(path);
+    }
+
+    public Key(String path, String s) throws IOException {
+        lehm = new lehmenn_test();
+        gcdE = new gcdExtended();
+        _zero = BigInteger.valueOf(0);
+        _one = BigInteger.valueOf(1);
+        _two = BigInteger.valueOf(2);
+        readKeyFromServer(path);
     }
 
     public void setA(BigInteger a) {
@@ -93,12 +101,17 @@ public class Key {
     }
 
     public void writeKeytoFile(String filePath) {
-        // System.out.println("FROM WRITE KEY TO FILE");
-        // System.out.println("p: " + jsonObject.getBigInteger("p"));
-        // System.out.println("g: " + jsonObject.getBigInteger("g"));
-        // System.out.println("a: " + jsonObject.getBigInteger("a"));
-        // System.out.println("u: " + jsonObject.getBigInteger("u"));
         fileOpr.writeJsonToFile(jsonObject, filePath);
+    }
+
+    public void readKeyFromServer(String filePath) throws IOException {
+        // read in json form
+        jsonObject = fileOpr.readJsonFromFile(filePath);
+        this.p = jsonObject.getBigInteger("p");
+        this.g = jsonObject.getBigInteger("g");
+        // this.u = jsonObject.getBigInteger("u");
+        this.y = jsonObject.getBigInteger("y");
+        this.blocksize = jsonObject.getInt("block_size");
     }
 
     public void readKeyFromFile(String filePath) throws IOException {
@@ -112,8 +125,16 @@ public class Key {
         this.blocksize = jsonObject.getInt("block_size");
     }
 
-    // Beat's code
-    // Copy the whole method
+    public void readSignatureKeyFromFile(String filePath) throws IOException {
+        // read in json form
+        jsonObject = fileOpr.readJsonFromFile(filePath);
+        this.p = jsonObject.getBigInteger("p");
+        this.g = jsonObject.getBigInteger("g");
+        // this.u = jsonObject.getBigInteger("u");
+        this.y = jsonObject.getBigInteger("y");
+        // this.k = jsonObject.getBigInteger("k");
+    }
+
     public void random_P(int n) {
         int roundTest = 100;
         Random rand = new Random();
@@ -139,17 +160,13 @@ public class Key {
         int len = maxLimit.bitLength();
         BigInteger p =  _zero;
 
-        // System.out.println("i = "+i);
         p = new BigInteger(len, rand);
         if (p.compareTo(minLimit) < 0)
             p = p.add(minLimit);
         if (p.compareTo(maxLimit) >= 0)
             p = p.mod(maxLimit).add(minLimit);
-        // System.out.println("p = "+p);
 
         while(p.compareTo(maxLimit) < 0) {
-            // System.out.println(p);
-
             //for cut down even number
             if (p.mod(_two).equals(_zero))
                 p = p.add(_one);
@@ -176,20 +193,6 @@ public class Key {
                 p = p.add(_two);
                 continue;
             }
-
-            // check safe prime
-            // if (!lehm.testPrime(p.subtract(_one).divide(_two), roundTest)) {
-            //     // System.out.println(p+" is not safe prime");
-            //     //p = p.multiply(_two).add(_one);
-
-            //     //for break loopI
-            //     //loopI = !lehm.testPrime(p, roundTest);
-            //     // System.out.println("is new p is prime? : "+(!loopI));
-            // } else{
-            //     //break in safe prime case
-            //     loopI = false;
-            //     break;
-            // }
         }
         if (loopI) {
             System.out.println("Loop I is true");
@@ -210,7 +213,6 @@ public class Key {
             g = g.add(minLimit);
         if (g.compareTo(maxLimit) >= 0)
             g = g.mod(maxLimit).add(minLimit);
-        // System.out.println("g = "+g);
 
         // g^(p-1)/2 % p must != 1
         // if g^(p-1)/2 % p = 1 then g = p-g
@@ -233,7 +235,6 @@ public class Key {
             u = u.add(minLimit);
         if (u.compareTo(maxLimit) >= 0)
             u = u.mod(maxLimit).add(minLimit);
-        // System.out.println("u = "+u);
 
         this.u = u;
         jsonObject.put("u", u);
@@ -254,7 +255,6 @@ public class Key {
                 k = k.add(minLimit);
             if (k.compareTo(maxLimit) >= 0)
                 k = k.mod(maxLimit).add(minLimit);
-            // System.out.println("k = "+k);
 
             loopI = !gcdE.testGCD(p.subtract(_one), k);
         }
@@ -263,9 +263,7 @@ public class Key {
     }
 
     public void generateY() {
-        // this.y = g.modPow(u, p);
         this.y = fastExpo.fastExponentiation(g, u, p);
-        // System.out.println("y from generate y = "+y);
         jsonObject.put("y", y);
     }
 }

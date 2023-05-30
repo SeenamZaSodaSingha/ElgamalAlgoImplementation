@@ -57,7 +57,6 @@ public class FileOpr {
         }
     }
 
-    //Seenam's implementation
     public long getMetaDataLength(String filePath) throws IOException {
         Path file = Paths.get(filePath);
         BasicFileAttributes attributes = Files.readAttributes(file, BasicFileAttributes.class);
@@ -74,11 +73,8 @@ public class FileOpr {
         File file = new File(filePath);
         FileInputStream fis = new FileInputStream(file);
         byte[] arr = new byte[(int)file.length()];
-        //System.out.println("length byte of file : "+fileName.length());
-        //System.out.println("length arr byte of file : "+arr.length);
         fis.read(arr);
         fis.close();
-        //BigInteger bigInt = new BigInteger(arr);
         return arr;
     }
 

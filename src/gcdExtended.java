@@ -27,7 +27,6 @@ class gcdExtended {
 			y = lasty.subtract(q.multiply(y));
 			lasty = temp;
 		}
-		// System.out.println("GCD " + a + " and its Roots x : " + lastx + " y :" + lasty);
 		return a.equals(BigInteger.valueOf(1));
 	}
 }

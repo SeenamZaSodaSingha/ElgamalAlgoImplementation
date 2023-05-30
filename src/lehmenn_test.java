@@ -27,7 +27,6 @@ class lehmenn_test
 			a = a.add(minLimit);
 		if (a.compareTo(maxLimit) >= 0)
 			a = a.mod(maxLimit).add(minLimit);
-		//System.out.println("a = "+a);
 		// calculating exponent
 		BigInteger e = n.subtract(_one).divide(_two);
 		// iterate to check for different base values
@@ -35,9 +34,7 @@ class lehmenn_test
 		while(t > 0)
 		{
 			// calculating final value using formula
-			// BigInteger result = a.modPow(e, n);
 			BigInteger result = fastExpo.fastExponentiation(a, e, n);
-			//System.out.println("round i = "+(++i)+" result = "+result);
 			// if not equal, try for different base
 			if( result.mod(n).equals( _one ) || 
 				result.mod(n).equals( n.subtract( _one ) ) )
@@ -47,7 +44,6 @@ class lehmenn_test
 					a = a.add(minLimit);
 				if (a.compareTo(maxLimit) >= 0)
 					a = a.mod(maxLimit).add(minLimit);
-				//System.out.println("a : "+a);
 				t -= 1;
 			}
 			// else return negative
@@ -63,12 +59,10 @@ class lehmenn_test
 	{
 		// if n is 2, it is prime
 		if(n.equals( _two )){
-			//System.out.println(" 2 is Prime");
 			return true;
 		}
 		// if even, it is composite
 		if( n.mod( _two ).equals( _zero ) ){
-			//System.out.println(n + " is Composite");
 			return false;
 		}
 		// if odd, check
@@ -76,11 +70,9 @@ class lehmenn_test
 		{
 			long flag = lehmann(n, t);
 			if(flag == 1){
-				//System.out.println(n + " may be Prime.");
 				return true;
 			}
 			else{
-				//System.out.println(n + " is Composite.");
 				return false;
 			}
 		}

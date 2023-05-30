@@ -11,7 +11,6 @@ public class padding {
         blockSize++;
         int lenRemining = (blockSize - msg.length()) % 10;
         pad = ""+lenRemining;
-        // System.out.println("padding num : "+pad);
         if (msg.length() < blockSize) {
             padCheck();
         }
@@ -70,7 +69,6 @@ public class padding {
     }
 
     public String isPad(){
-        // System.out.println("sign bit : "+paddingsStatus);
         return paddingsStatus;
     }
 

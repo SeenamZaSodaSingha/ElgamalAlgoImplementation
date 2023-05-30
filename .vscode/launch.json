@@ -6,6 +6,14 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Test0: Server.",
+            "request": "launch",
+            "mainClass": "App",
+            "projectName": "Elgamal algorithm_760e081a",
+            "args": "-s 256"
+        },
+        {
+            "type": "java",
             "name": "Test1: Encrypt message with gen key.",
             "request": "launch",
             "mainClass": "App",
@@ -18,7 +26,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "Elgamal algorithm_760e081a",
-            "args": "-f -e -gen 256 ./test/myletter.txt ./out/messageEncOut.txt"
+            "args": "-f -e ./out/key/Encrypt_key.json 256 ./test/myletter.txt ./out/messageEncOut.txt"
         },
         {
             "type": "java",

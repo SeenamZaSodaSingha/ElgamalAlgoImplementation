@@ -1,18 +1,10 @@
-import java.math.BigInteger;
+	import java.math.BigInteger;
 import java.util.Random;
 
 public class SignAlgorithm {
     private BigInteger p, alpha, beta, m, r, s, k;
 	private gcdExtended gcdE = new gcdExtended();
-	
-	/*
-	 * p -> use the same with message
-	 * k -> same with message
-	 * alpha -> g
-	 * m -> message
-	 */
-	//private key relate to p as coprime
-    // private BigInteger z = new BigInteger("16"); //between 1 -p-1 after get z and p-1 are coprime
+
     private BigInteger z; //between 1 -p-1 after get z and p-1 are coprime
 	
 
